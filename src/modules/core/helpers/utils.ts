@@ -193,3 +193,42 @@ export const getTime = async (options?: TimeOptions) => {
     const now = dayjs(date, format, locale ?? config.locale, strict).clone();
     return now.tz(zonetime ?? config.timezone);
 };
+
+/**
+ * 用于请求验证中的number数据转义
+ *
+ * @export
+ * @param {(string | number)} [value]
+ * @returns {*}  {(number | undefined)}
+ */
+export function tNumber(value?: string | number): string | number | undefined {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+        try {
+            return Number(value);
+        } catch (error) {
+            return value;
+        }
+    }
+
+    return value;
+}
+
+/**
+ * 用于请求验证中的boolean数据转义
+ *
+ * @export
+ * @param {(string | boolean)} [value]
+ * @return {*}
+ */
+export function tBoolean(value?: string | boolean): string | boolean | undefined {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+        try {
+            return JSON.parse(value.toLowerCase());
+        } catch (error) {
+            return value;
+        }
+    }
+    return value;
+}

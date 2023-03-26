@@ -1,6 +1,10 @@
 import { ModuleMetadata, PipeTransform, Type } from '@nestjs/common';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
+import { QueueOptions as BullMQOptions } from 'bullmq';
 import dayjs from 'dayjs';
+import Email from 'email-templates';
+import { RedisOptions as IoRedisOptions } from 'ioredis';
+import { Attachment } from 'nodemailer/lib/mailer';
 import { Ora } from 'ora';
 import { CommandModule } from 'yargs';
 
@@ -130,6 +134,16 @@ export type AppParams = {
      */
     app?: NestFastifyApplication;
 };
+
+/**
+ * 嵌套对象
+ */
+export type NestedRecord = Record<string, Record<string, any>>;
+
+/**
+ * 空对象
+ */
+export type RecordNever = Record<never, never>;
 
 /** ******************** 模块构造  ********************* */
 
@@ -280,4 +294,115 @@ export interface TimeOptions {
      * 时区
      */
     zonetime?: string;
+}
+
+/** ****************************** Redis及队列 ***************************** */
+
+/**
+ * Redis配置,通过createConnectionOptions函数生成
+ */
+export type RedisConfig = RedisOption[];
+
+/**
+ * 自定义Redis配置
+ */
+export type RedisConfigOptions = IoRedisOptions | IoRedisOptions[];
+
+/**
+ * Redis连接配置项
+ */
+export type RedisOption = Omit<IoRedisOptions, 'name'> & { name: string };
+
+/**
+ * 队列配置,通过createQueueOptions函数生成
+ */
+export type QueueConfig = BullMQOptions | Array<{ name: string } & BullMQOptions>;
+
+/**
+ * 自定义队列配置
+ */
+export type QueueConfigOptions = QueueOption | Array<{ name: string } & QueueOption>;
+
+/**
+ * 队列项配置
+ */
+export type QueueOption = Omit<BullMQOptions, 'connection'> & { redis?: string };
+
+/** ****************************** 发信服务  ***************************** */
+
+/**
+ * 腾讯云短信驱动配置
+ */
+export type SmsConfig<T extends NestedRecord = RecordNever> = {
+    secretId: string;
+    secretKey: string;
+    sign: string;
+    appid: string;
+    region: string;
+    endpoint?: string;
+} & T;
+
+/**
+ * 发送接口参数
+ */
+export interface SmsSendParams {
+    appid?: string;
+    numbers: string[];
+    template: string;
+    sign?: string;
+    endpoint?: string;
+    vars?: Record<string, any>;
+    ExtendCode?: string;
+    SessionContext?: string;
+    SenderId?: string;
+}
+
+/**
+ * SMTP邮件发送配置
+ */
+export type SmtpConfig<T extends NestedRecord = RecordNever> = {
+    host: string;
+    user: string;
+    password: string;
+    /**
+     * Email模板总路径
+     */
+    resource: string;
+    from?: string;
+    /**
+     * smtp端口,默认25(开启后为443)
+     */
+    port?: number;
+    /**
+     * 是否开启ssl
+     */
+    secure?: boolean;
+} & T;
+
+/**
+ * Smtp发送接口配置
+ */
+export interface SmtpSendParams {
+    // 模板名称
+    name?: string;
+    // 发信地址
+    from?: string;
+    // 主题
+    subject?: string;
+    // 目标地址
+    to: string | string[];
+    // 回信地址
+    reply?: string;
+    // 是否加载html模板
+    html?: boolean;
+    // 是否加载text模板
+    text?: boolean;
+    // 模板变量
+    vars?: Record<string, any>;
+    // 是否预览
+    preview?: boolean | Email.PreviewEmailOpts;
+    // 主题前缀
+    subjectPrefix?: string;
+    // 附件
+    attachments?: Attachment[];
 }

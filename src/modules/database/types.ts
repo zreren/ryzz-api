@@ -11,6 +11,10 @@ import {
     EntityManager,
     EntityTarget,
     ObjectType,
+    OneToOne,
+    OneToMany,
+    ManyToOne,
+    ManyToMany,
 } from 'typeorm';
 import yargs from 'yargs';
 
@@ -47,6 +51,16 @@ export type DbConfig = Record<string, any> & {
 export type TypeormOption = Omit<TypeOrmModuleOptions, 'name' | 'migrations'> & {
     name: string;
 } & Required<DbAdditionalOption>;
+
+/**
+ * subscriber设置属性
+ */
+export type SubcriberSetting = {
+    // 监听的模型是否为树模型
+    tree?: boolean;
+    // 是否支持软删除
+    trash?: boolean;
+};
 
 /**
  * 额外数据库选项,用于CLI工具
@@ -253,6 +267,19 @@ export interface MigrationRunOptions extends MigrationRevertOptions {
 export interface MigrationRevertOptions {
     transaction?: string;
     fake?: boolean;
+}
+
+/**
+ * 动态关联接口
+ */
+export interface DynamicRelation {
+    relation:
+        | ReturnType<typeof OneToOne>
+        | ReturnType<typeof OneToMany>
+        | ReturnType<typeof ManyToOne>
+        | ReturnType<typeof ManyToMany>;
+    others?: Array<(...args: any) => any>;
+    column: string;
 }
 
 /** ****************************** 数据填充Seeder **************************** */
