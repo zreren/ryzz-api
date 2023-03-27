@@ -265,9 +265,9 @@ export class Configure {
         if (!process.env.NODE_ENV) {
             process.env.NODE_ENV = EnvironmentType.PRODUCTION;
         }
-        const search = [findUp.findUpSync(['.env'])];
+        const search = [findUp.sync(['.env'])];
         if (process.env.NODE_ENV !== EnvironmentType.PRODUCTION) {
-            search.push(findUp.findUpSync([`.env.${process.env.NODE_ENV}`]));
+            search.push(findUp.sync([`.env.${process.env.NODE_ENV}`]));
         }
         const envFiles = search.filter((file) => file !== undefined) as string[];
         // 所有文件中配置的环境变量

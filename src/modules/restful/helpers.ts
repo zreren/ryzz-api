@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import { camelCase, isNil, omit, trim, upperFirst, isFunction } from 'lodash';
 
 import { Configure } from '@/modules/core/configure';
+
 import { CreateModule, isAsyncFn } from '@/modules/core/helpers';
 
 import { CONTROLLER_DEPENDS, CRUD_OPTIONS_REGISTER } from './constants';
