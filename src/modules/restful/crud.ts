@@ -41,7 +41,6 @@ export const registerCrud = async <T extends BaseController<any> | BaseControlle
         }
 
         const descriptor = Object.getOwnPropertyDescriptor(Target.prototype, name);
-
         const [, ...params] = Reflect.getMetadata('design:paramtypes', Target.prototype, name);
 
         if (name === 'store' && !isNil(dtos.store)) {

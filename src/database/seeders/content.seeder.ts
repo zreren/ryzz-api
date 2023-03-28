@@ -1,9 +1,8 @@
-import fs from 'fs';
-
 import path from 'path';
 
 import { faker } from '@faker-js/faker';
 import { existsSync } from 'fs-extra';
+import { isNil } from 'lodash';
 import { DataSource, EntityManager, In } from 'typeorm';
 
 import { CategoryEntity, CommentEntity, PostEntity } from '@/modules/content/entities';
@@ -13,6 +12,8 @@ import { getRandListData, panic } from '@/modules/core/helpers';
 import { BaseSeeder } from '@/modules/database/base';
 
 import { DbFactory } from '@/modules/database/types';
+
+import { UserEntity } from '@/modules/user/entities';
 
 import { getCustomRepository } from '../../modules/database/helpers';
 import { categories, CategoryData, PostData, posts } from '../factories/content.data';
@@ -68,6 +69,7 @@ export default class ContentSeeder extends BaseSeeder {
 
     private async loadPosts(data: PostData[]) {
         const allCates = await this.em.find(CategoryEntity);
+        const randomUser = await this.getOneUser();
         for (const item of data) {
             const filePath = path.join(__dirname, '../../assets/posts', item.contentFile);
             if (!existsSync(filePath)) {
@@ -78,12 +80,8 @@ export default class ContentSeeder extends BaseSeeder {
             }
             const options: IPostFactoryOptions = {
                 title: item.title,
-                body: fs.readFileSync(filePath, 'utf8'),
-                isPublished: true,
+                // body: fs.readFileSync(filePath, 'utf8'),
             };
-            if (item.summary) {
-                options.summary = item.summary;
-            }
             if (item.categories) {
                 options.categories = await getCustomRepository(
                     this.dataSource,
@@ -92,15 +90,25 @@ export default class ContentSeeder extends BaseSeeder {
                     where: { name: In(item.categories) },
                 });
             }
+            // user
+            options.user = randomUser;
             const post = await this.factorier(PostEntity)(options).create();
-
             await this.genRandomComments(post, Math.floor(Math.random() * 5));
         }
         const redoms = await this.factorier(PostEntity)<IPostFactoryOptions>({
             categories: getRandListData(allCates),
+            user: randomUser,
         }).createMany(100);
         for (const redom of redoms) {
             await this.genRandomComments(redom, Math.floor(Math.random() * 2));
         }
+    }
+
+    private async getOneUser(): Promise<UserEntity> {
+        const randomUser = 'random_user';
+        const user = await UserEntity.findOneBy({ username: randomUser });
+        return isNil(user)
+            ? UserEntity.save({ username: randomUser, password: '123456' } as any)
+            : user;
     }
 }

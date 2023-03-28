@@ -7,6 +7,7 @@ import * as configs from './config';
 
 import { ContentModule } from './modules/content/content.module';
 import { MediaModule } from './modules/media/media.module';
+import { RbacGuard } from './modules/rbac/guards';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { UserModule } from './modules/user/user.module';
 
@@ -20,4 +21,5 @@ export const creator = createApp({
             logger: ['error', 'warn'],
         });
     },
+    globals: { guard: RbacGuard },
 });

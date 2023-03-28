@@ -49,7 +49,7 @@ export class UserSubscriber extends BaseSubscriber<UserEntity> {
             event.entity.password = randomBytes(11).toString('hex').slice(0, 22);
         }
         // 自动加密密码(事件触发有异常，暂时直接在UserService哈希处理)
-        // event.entity.password = encrypt(event.entity.password);
+        event.entity.password = await encrypt(event.entity.password);
         if (isNil(event.entity.redeemed))
             event.entity.redeemed = await App.configure.get<number>('coupon.register', 15);
         if (isNil(event.entity.earned) || event.entity.earned < event.entity.redeemed)

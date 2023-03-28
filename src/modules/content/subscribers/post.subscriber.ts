@@ -4,7 +4,7 @@ import { EventSubscriber } from 'typeorm';
 import { App } from '@/modules/core/app';
 import { BaseSubscriber } from '@/modules/database/base';
 
-import { PostBodyType } from '../constants';
+import { PostType } from '../constants';
 import { PostEntity } from '../entities';
 import { SanitizeService } from '../services';
 
@@ -25,7 +25,7 @@ export class PostSubscriber extends BaseSubscriber<PostEntity> {
      */
     async afterLoad(entity: PostEntity) {
         const sanitizeService = App.app.get(SanitizeService, { strict: false });
-        if (entity.type === PostBodyType.HTML && !isNil(sanitizeService)) {
+        if (entity.type === PostType.NORMAL && !isNil(sanitizeService)) {
             entity.body = sanitizeService.sanitize(entity.body);
         }
     }

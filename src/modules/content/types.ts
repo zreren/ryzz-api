@@ -1,6 +1,6 @@
 import { PostEntity } from './entities';
 
-export type PostSearchBody = Pick<ClassToPlain<PostEntity>, 'title' | 'body' | 'summary'> & {
+export type PostSearchBody = Pick<ClassToPlain<PostEntity>, 'title' | 'body'> & {
     categories: string;
 };
 

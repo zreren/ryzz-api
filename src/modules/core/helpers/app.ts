@@ -1,6 +1,6 @@
 import { Global, Module, ModuleMetadata, Type } from '@nestjs/common';
 
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
 import chalk from 'chalk';
 import { isNil, omit } from 'lodash';
@@ -99,6 +99,12 @@ export async function createBootModule(
             useClass: AppFilter,
         });
     }
+    if (!isNil(globals.guard)) {
+        providers.push({
+            provide: APP_GUARD,
+            useClass: globals.guard,
+        });
+    }
     return {
         BootModule: CreateModule('BootModule', () => {
             let meta: ModuleMetadata = {
@@ -180,7 +186,6 @@ export async function createCommands(params: CreatorData): Promise<CommandModule
 export async function buildCli(builder: () => Promise<CreatorData>) {
     const params = await builder();
     const commands = await createCommands(params);
-    console.log();
     commands.forEach((command) => yargs.command(command));
     yargs
         .usage('Usage: $0 <command> [options]')

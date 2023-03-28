@@ -3,7 +3,9 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     ManyToOne,
+    OneToMany,
     Tree,
     TreeChildren,
     TreeParent,
@@ -11,6 +13,9 @@ import {
 
 import { BaseEntity } from '@/modules/database/base';
 
+import { UserEntity } from '@/modules/user/entities';
+
+import { CommentLikeEntity } from './like.entity';
 import { PostEntity } from './post.entity';
 
 /**
@@ -20,6 +25,21 @@ import { PostEntity } from './post.entity';
 @Tree('materialized-path')
 @Entity('content_comments')
 export class CommentEntity extends BaseEntity {
+    [key: string]: any;
+
+    @Expose()
+    @ManyToOne(() => UserEntity, (user) => user.comments, {
+        nullable: false,
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
+    @Index('idx_uid')
+    user: UserEntity;
+
+    @Expose()
+    @OneToMany(() => CommentLikeEntity, (commentLike) => commentLike.comment)
+    post_likes: CommentLikeEntity[];
+
     @Expose()
     @Column({ comment: '评论内容', type: 'longtext' })
     body: string;
