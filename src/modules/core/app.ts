@@ -68,7 +68,7 @@ export class App {
             });
             // 初始化应用
             if (this._app.getHttpAdapter() instanceof FastifyAdapter) {
-                // await this._app.init();
+                await this._app.init();
             }
         } catch (error) {
             panic({ message: 'Create app failed!', error });

@@ -1,6 +1,7 @@
 import * as contentControllers from '@/modules/content/controllers';
 import { Configure } from '@/modules/core/configure';
 import { ApiVersionOption } from '@/modules/restful/types';
+import * as userControllers from '@/modules/user/controllers';
 
 export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
     routes: [
@@ -17,13 +18,24 @@ export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
                     { name: '评论', description: '评论的增删查操作' },
                     { name: '标签', description: '标签的增删改查操作' },
                     { name: '举报', description: '举报的增删改查操作' },
+                    {
+                        name: '账户操作',
+                        description: '用户登录后对账户进行的更改密码,换绑邮箱等一系列操作',
+                    },
+                    { name: 'Auth操作', description: '用户登录,登出,注册,发送找回密码等操作' },
                 ],
+                auth: true,
             },
             children: [
                 {
                     name: 'content',
                     path: 'content',
                     controllers: Object.values(contentControllers),
+                },
+                {
+                    name: 'user',
+                    path: 'user',
+                    controllers: Object.values(userControllers),
                 },
             ],
         },
@@ -44,7 +56,7 @@ export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
                 {
                     name: 'content',
                     path: 'content',
-                    controllers: Object.values(contentControllers),
+                    controllers: Object.values(userControllers),
                 },
             ],
         },

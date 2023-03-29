@@ -18,8 +18,9 @@ export const database = createDbConfig((configure) => ({
             username: configure.env('DB_USER', 'root'),
             password: configure.env('DB_PASSWORD', 'root'),
             database: configure.env('DB_NAME', '3r-room'),
-            seeders: [ContentSeeder, UserSeeder],
+            seeders: [UserSeeder, ContentSeeder], // ContentSeeder依赖UserSeeder数据，需放后面
             factories: [ContentFactory, UserFactory],
+            // logging: 'all',
         },
     ],
 }));
