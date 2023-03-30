@@ -6,6 +6,7 @@ import {
     CreateDateColumn,
     DeleteDateColumn,
     Entity,
+    JoinTable,
     ManyToMany,
     OneToMany,
     OneToOne,
@@ -20,6 +21,8 @@ import { PermissionEntity, RoleEntity } from '@/modules/rbac/entities';
 import { getUserConfig } from '@/modules/user/helpers';
 
 import { AccessTokenEntity } from './access-token.entity';
+import { UserBanEntity } from './user-bans.entity';
+import { UserFollowerEntity } from './user-follower.entity';
 
 /**
  * 用户模型
@@ -121,4 +124,19 @@ export class UserEntity extends BaseEntity {
         cascade: true,
     })
     permissions!: PermissionEntity[];
+
+    @Expose()
+    @OneToMany(() => UserFollowerEntity, (followers) => followers.follower)
+    @JoinTable()
+    followers: UserEntity[];
+
+    @Expose()
+    @OneToMany(() => UserFollowerEntity, (followers) => followers.user)
+    @JoinTable()
+    followings: UserEntity[];
+
+    @Expose()
+    @OneToMany(() => UserBanEntity, (bans) => bans.baned_user)
+    @JoinTable()
+    bans: UserEntity[];
 }

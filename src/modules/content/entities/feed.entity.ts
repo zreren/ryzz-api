@@ -26,4 +26,12 @@ export class FeedEntity extends BaseEntity {
     })
     @Index('idx_user_id')
     user_id: number;
+
+    @Column({
+        comment: '发布时间戳',
+        type: Number,
+        unsigned: true,
+    })
+    @Index('idx_publish_time')
+    publish_time: number;
 }
