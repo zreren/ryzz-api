@@ -19,8 +19,12 @@ export class FollowService {
         const followerKey = this.prefixFollowerKey() + target_user_id;
         const followingKey = this.prefixFollowingKey() + user_id;
         const currentTimestamp = Date.now();
-        this.redisService.getClient().zadd(followerKey, currentTimestamp, user_id);
-        this.redisService.getClient().zadd(followingKey, currentTimestamp, target_user_id);
+        const script =
+            "if redis.call('ZSCORE', KEYS[1], KEYS[3]) == false then redis.call('ZADD', KEYS[1], KEYS[2], KEYS[3]) end";
+        this.redisService.getClient().eval(script, 3, followerKey, currentTimestamp, user_id);
+        this.redisService
+            .getClient()
+            .eval(script, 3, followingKey, currentTimestamp, target_user_id);
     }
 
     // 取关
