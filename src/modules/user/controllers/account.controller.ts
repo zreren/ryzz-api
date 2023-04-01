@@ -8,6 +8,7 @@ import {
     Param,
     Patch,
     Post,
+    Query,
     Res,
     SerializeOptions,
     StreamableFile,
@@ -25,6 +26,8 @@ import { MediaService } from '@/modules/media/services';
 
 import { Depends } from '@/modules/restful/decorators';
 
+import { ListQueryDto } from '@/modules/restful/dtos';
+
 import { CaptchaActionType } from '../constants';
 import { Guest, ReqUser } from '../decorators';
 
@@ -34,6 +37,7 @@ import {
     UpdateAccountDto,
     UpdatePasswordDto,
     UploadAvatarDto,
+    UserFollowDto,
 } from '../dtos';
 import { UserEntity } from '../entities';
 import { getUserConfig } from '../helpers';
@@ -44,7 +48,6 @@ import { UserModule } from '../user.module';
 /**
  * 账户中心控制器
  */
-
 @ApiTags('账户操作')
 @ApiBearerAuth()
 @Depends(UserModule, MediaModule)
@@ -71,7 +74,6 @@ export class AccountController {
         @ReqUser() user: ClassToPlain<UserEntity>,
         @Param('item', new OptionalUUIDPipe()) item?: string,
     ) {
-        console.log(user);
         if (isNil(item) && isNil(user)) throw new NotFoundException();
         return this.userService.detail(item ?? user.id);
     }
@@ -169,5 +171,37 @@ export class AccountController {
         const image = createReadStream(avatar);
         res.type(lookup(avatar) as string);
         return new StreamableFile(image);
+    }
+
+    @Get('followings')
+    @ApiOperation({ summary: '关注列表' })
+    async followings(
+        @Query() data: ListQueryDto,
+        @ReqUser() user: ClassToPlain<UserEntity>,
+    ): Promise<any> {
+        const response = await this.userService.getFollowings(data, user.id);
+        return response;
+    }
+
+    @Get('followers')
+    @ApiOperation({ summary: '粉丝列表' })
+    async followers(
+        @Query() data: ListQueryDto,
+        @ReqUser() user: ClassToPlain<UserEntity>,
+    ): Promise<any> {
+        const response = await this.userService.getFollowers(data, user.id);
+        return response;
+    }
+
+    @Post('follow')
+    @ApiOperation({ summary: '关注' })
+    async follow(@Body() data: UserFollowDto, @ReqUser() user: ClassToPlain<UserEntity>) {
+        return this.userService.follow(user, data.user);
+    }
+
+    @Post('unfollow')
+    @ApiOperation({ summary: '取关' })
+    async unfollow(@Body() data: UserFollowDto, @ReqUser() user: ClassToPlain<UserEntity>) {
+        return this.userService.unfollow(user, data.user);
     }
 }

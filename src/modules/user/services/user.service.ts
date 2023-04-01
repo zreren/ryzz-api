@@ -4,9 +4,12 @@ import { EntityNotFoundError, In, SelectQueryBuilder } from 'typeorm';
 
 import { Configure } from '@/modules/core/configure';
 import { BaseService } from '@/modules/database/base';
+import { manualPaginateWithItems } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 import { SystemRoles } from '@/modules/rbac/constants';
 import { RoleRepository } from '@/modules/rbac/repositories';
+
+import { ListQueryDto } from '@/modules/restful/dtos';
 
 import { UpdateAccountDto, UpdatePasswordDto } from '../dtos/account.dto';
 import { CreateUserDto, QueryUserDto, UpdateUserDto } from '../dtos/user.dto';
@@ -14,6 +17,13 @@ import { UserEntity } from '../entities/user.entity';
 import { decrypt, encrypt, getUserConfig } from '../helpers';
 import { UserRepository } from '../repositories/user.repository';
 import { UserConfig } from '../types';
+
+import { FollowService } from './follow.service';
+
+interface FollowUser {
+    user: UserEntity;
+    timestamp: number;
+}
 
 /**
  * 用户管理服务
@@ -26,6 +36,7 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
         protected readonly userRepository: UserRepository,
         protected roleRepository: RoleRepository,
         protected configure: Configure,
+        protected readonly followService: FollowService,
     ) {
         super(userRepository);
     }
@@ -162,7 +173,7 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
      * @param callback
      */
     async findOneByCredential(credential: string, callback?: QueryHook<UserEntity>) {
-        let query = this.userRepository.buildBaseQuery();
+        let query = this.userRepository.buildBaseQB();
         if (callback) {
             query = await callback(query);
         }
@@ -179,7 +190,7 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
      * @param callback
      */
     async findOneByCondition(condition: { [key: string]: any }, callback?: QueryHook<UserEntity>) {
-        let query = this.userRepository.buildBaseQuery();
+        let query = this.userRepository.buildBaseQB();
         if (callback) {
             query = await callback(query);
         }
@@ -195,6 +206,75 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
 
     async getCurrentUser(user?: ClassToPlain<UserEntity>): Promise<UserEntity> {
         return this.userRepository.findOneOrFail({ where: { id: user.id } });
+    }
+
+    /**
+     * 关注
+     * @param user
+     * @param user_id
+     */
+    async follow(user: UserEntity, user_id: string) {
+        this.followService.follow(user.id, user_id);
+    }
+
+    /**
+     * 关注
+     * @param user
+     * @param user_id
+     */
+    async unfollow(user: UserEntity, user_id: string) {
+        this.followService.unfollow(user.id, user_id);
+    }
+
+    /**
+     * 用户粉丝列表分页数据
+     * @param queryDto 分页条件
+     * @param user_id 用户ID
+     */
+    async getFollowers(queryDto: ListQueryDto, user_id: string) {
+        return this.getFollowList(user_id, queryDto.page, queryDto.limit, 'follower');
+    }
+
+    /**
+     * 用户关注列表分页数据
+     * @param queryDto 分页条件
+     * @param user_id 用户ID
+     */
+    async getFollowings(queryDto: ListQueryDto, user_id: string) {
+        return this.getFollowList(user_id, queryDto.page, queryDto.limit);
+    }
+
+    async getFollowList(user_id: string, page = 1, limit = 10, type = 'following') {
+        const followUserIds =
+            type === 'following'
+                ? await this.followService.getFollowings(user_id, page, limit)
+                : await this.followService.getFollowers(user_id, page, limit);
+        const data: FollowUser[] = [];
+        const mapData = new Map();
+        followUserIds.forEach((v, k) => {
+            if (k % 2 !== 0) {
+                const uid = followUserIds[k - 1];
+                mapData.set(uid, v);
+            }
+        });
+        if (mapData.size > 0) {
+            const userIds = Array.from(mapData.keys());
+            const users = await this.userRepository.find({
+                where: { id: In(userIds) },
+                select: ['id', 'nickname', 'avatar'],
+            });
+            users.forEach((user) => {
+                data.push({
+                    user: user as UserEntity,
+                    timestamp: mapData.get(user.id),
+                } as FollowUser);
+            });
+        }
+        const totalItems =
+            type === 'following'
+                ? await this.followService.getFollowingCount(user_id)
+                : await this.followService.getFollowerCount(user_id);
+        return manualPaginateWithItems({ page, limit }, data, totalItems);
     }
 
     /**

@@ -7,14 +7,11 @@ import { UserEntity } from '../entities/user.entity';
 export class UserRepository extends BaseRepository<UserEntity> {
     protected _qbName = 'user';
 
-    buildBaseQuery() {
-        return (
-            this.createQueryBuilder(this.qbName)
-                .leftJoinAndSelect(`${this.qbName}.roles`, 'roles')
-                // .leftJoinAndSelect(`${this.qbName}.roles.permissions`, 'rolePermissions')
-                .leftJoinAndSelect(`${this.qbName}.permissions`, 'permissions')
-                .leftJoinAndSelect(`${this.qbName}.avatar`, 'avatar')
-                .orderBy(`${this.qbName}.createdAt`, 'DESC')
-        );
+    buildBaseQB() {
+        return this.createQueryBuilder(this.qbName)
+            .leftJoinAndSelect(`${this.qbName}.roles`, 'roles')
+            .leftJoinAndSelect(`${this.qbName}.permissions`, 'permissions')
+            .leftJoinAndSelect(`${this.qbName}.avatar`, 'avatar')
+            .orderBy(`${this.qbName}.createdAt`, 'DESC');
     }
 }

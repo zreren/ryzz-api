@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '@/modules/restful/base';
 import { Crud, Depends } from '@/modules/restful/decorators';
@@ -12,6 +12,7 @@ import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostService } from '../services/post.service';
 
 @ApiTags('帖子')
+@ApiBearerAuth()
 @Depends(ContentModule)
 @Crud(async () => ({
     id: 'post',

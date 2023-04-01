@@ -142,3 +142,35 @@ export class QueryUserDto extends ListQueryDto {
     @IsEnum(UserOrderType)
     declare orderBy?: UserOrderType;
 }
+
+@Injectable()
+export class UserFollowDto {
+    @ApiPropertyOptional({
+        description: '被关注者的用户ID',
+        type: String,
+    })
+    @IsDataExist(UserEntity, {
+        always: true,
+        message: '用户不存在',
+    })
+    @IsUUID(undefined, {
+        always: true,
+        message: '用户ID格式不正确',
+    })
+    @IsOptional({ always: true })
+    user?: string;
+}
+
+@Injectable()
+export class UserUnfollowDto {
+    @ApiPropertyOptional({
+        description: '被关注者的用户ID',
+        type: String,
+    })
+    @IsUUID(undefined, {
+        always: true,
+        message: '用户ID格式不正确',
+    })
+    @IsOptional({ always: true })
+    user?: string;
+}
