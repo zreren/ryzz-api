@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { BaseEntity, Column, CreateDateColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * AccessToken与RefreshToken的公共字段
@@ -14,6 +14,7 @@ export abstract class BaseToken extends BaseEntity {
      * @type {string}
      */
     @Column({ length: 500 })
+    @Index('idx_value')
     value!: string;
 
     @Column({

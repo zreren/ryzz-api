@@ -2,12 +2,14 @@ import { ModuleMetadata } from '@nestjs/common';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
+import { JwtService } from '@nestjs/jwt';
+
 import { ModuleBuilder } from '../core/decorators';
 
 import { DatabaseModule } from '../database/database.module';
 import { addEntities, addSubscribers } from '../database/helpers';
 
-import { FollowService } from '../user/services';
+import { FollowService, TokenService } from '../user/services';
 
 import * as entities from './entities';
 import * as listeners from './listeners';
@@ -32,24 +34,29 @@ import { SearchType } from './types';
                 PostRepository,
                 CategoryRepository,
                 CategoryService,
+                TokenService,
                 { token: SearchService, optional: true },
             ],
             useFactory(
                 postRepository: PostRepository,
                 categoryRepository: CategoryRepository,
                 categoryService: CategoryService,
+                tokenService: TokenService,
                 searchService?: SearchService,
             ) {
                 return new PostService(
                     postRepository,
                     categoryRepository,
                     categoryService,
+                    tokenService,
                     searchService,
                     searchType,
                 );
             },
         },
         FollowService,
+        TokenService,
+        JwtService,
     ];
     if (configure.has('elastic') && searchType === 'elastic') providers.push(SearchService);
     return {

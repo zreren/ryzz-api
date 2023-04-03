@@ -30,6 +30,9 @@ import { TagEntity } from './tag.entity';
  */
 @Exclude()
 @Entity('content_posts')
+@Index('idx_country_publishedAt', ['country', 'publishedAt'])
+@Index('idx_likeCount_country', ['likeCount', 'country'])
+@Index('idx_commentCount_country', ['commentCount', 'country'])
 export class PostEntity extends BaseEntity {
     @Expose()
     @ManyToOne(() => UserEntity, (user) => user.posts)
@@ -69,13 +72,11 @@ export class PostEntity extends BaseEntity {
     @Expose()
     @Type(() => Number)
     @Column({ comment: '评论数' })
-    @Index('idx_comment')
     commentCount: number;
 
     @Expose()
     @Type(() => Number)
     @Column({ comment: '点赞数' })
-    @Index('idx_like')
     likeCount: number;
 
     @Expose()
@@ -89,6 +90,11 @@ export class PostEntity extends BaseEntity {
     collectCount: number;
 
     @Expose()
+    @Type(() => Number)
+    @Column({ comment: '详情页浏览数' })
+    detailCount: number;
+
+    @Expose()
     @Type(() => String)
     @Column({ comment: 'ip' })
     ip: string;
@@ -96,12 +102,11 @@ export class PostEntity extends BaseEntity {
     @Expose()
     @Column({
         comment: '国家',
-        type: 'enum',
-        enum: Countries,
-        default: Countries.US,
+        type: 'char',
+        default: Countries.BT,
+        length: 2,
     })
-    @Index('idx_country')
-    country: Countries;
+    country: string;
 
     @Expose()
     @Column({ comment: '位置' })

@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+
+import { ExtractJwt } from 'passport-jwt';
 
 import { BaseController } from '@/modules/restful/base';
 import { Crud, Depends } from '@/modules/restful/decorators';
@@ -8,8 +10,9 @@ import { Crud, Depends } from '@/modules/restful/decorators';
 import { ListQueryDto } from '@/modules/restful/dtos';
 import { createHookOption } from '@/modules/restful/helpers';
 
-import { ReqUser } from '@/modules/user/decorators';
+import { Guest, ReqUser } from '@/modules/user/decorators';
 
+import { ClientCountry } from '@/modules/user/decorators/clientCountry.decorator';
 import { UserEntity } from '@/modules/user/entities';
 
 import { ContentModule } from '../content.module';
@@ -32,23 +35,23 @@ import { PostService } from '../services/post.service';
     enabled: [
         {
             name: 'list',
-            option: createHookOption('文章查询,以分页模式展示'),
+            option: createHookOption('帖子查询,以分页模式展示'),
         },
         {
             name: 'detail',
-            option: createHookOption('文章详情'),
+            option: createHookOption('帖子详情'),
         },
         {
             name: 'store',
-            option: createHookOption('创建文章'),
+            option: createHookOption('创建帖子'),
         },
         {
             name: 'update',
-            option: createHookOption('更新文章'),
+            option: createHookOption('更新帖子'),
         },
         {
             name: 'delete',
-            option: createHookOption('删除文章'),
+            option: createHookOption('删除帖子'),
         },
     ],
     dtos: {
@@ -67,8 +70,20 @@ export class PostController extends BaseController<PostService> {
         super(service);
     }
 
+    @Get('home')
+    @ApiOperation({ summary: '首页帖子列表' })
+    @Guest()
+    async home(
+        @Query() options: ListQueryDto,
+        @Req() request: any,
+        @ClientCountry() clientCountry: string,
+    ) {
+        const requestToken = ExtractJwt.fromAuthHeaderAsBearerToken()(request) as string;
+        return this.service.getHomeList(requestToken, clientCountry, options.page, options.limit);
+    }
+
     @Get('feeds')
-    @ApiOperation({ summary: 'feeds流' })
+    @ApiOperation({ summary: '关注动态feed' })
     async feeds(@Query() options: ListQueryDto, @ReqUser() user: ClassToPlain<UserEntity>) {
         return this.feedService.getTimelineFeeds(user.id, options.page, options.limit);
     }

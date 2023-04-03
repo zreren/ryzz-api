@@ -1,21 +1,11 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import {
-    IsBoolean,
-    IsDefined,
-    IsEnum,
-    IsNotEmpty,
-    IsOptional,
-    IsUUID,
-    MaxLength,
-} from 'class-validator';
+import { IsDefined, IsEnum, IsNotEmpty, IsOptional, IsUUID, MaxLength } from 'class-validator';
 
 import { DtoValidation } from '@/modules/core/decorators';
-import { toBoolean } from '@/modules/core/helpers';
 
 import { IsDataExist } from '@/modules/database/constraints';
 
-import { ListWithTrashedQueryDto } from '@/modules/restful/dtos';
+import { ListQueryDto } from '@/modules/restful/dtos';
 
 import { PostOrderType } from '../constants';
 import { CategoryEntity } from '../entities';
@@ -24,7 +14,7 @@ import { CategoryEntity } from '../entities';
  * 帖子分页查询验证
  */
 @DtoValidation({ type: 'query' })
-export class QueryPostDto extends ListWithTrashedQueryDto {
+export class QueryPostDto extends ListQueryDto {
     @ApiPropertyOptional({
         description: '搜索关键字:帖子全文搜索字符串',
         maxLength: 100,
@@ -45,14 +35,6 @@ export class QueryPostDto extends ListWithTrashedQueryDto {
     @IsUUID(undefined, { message: '分类ID格式错误' })
     @IsOptional()
     category?: string;
-
-    @ApiPropertyOptional({
-        description: '发布状态:根据是否发布过滤帖子状态',
-    })
-    @Transform(({ value }) => toBoolean(value))
-    @IsBoolean()
-    @IsOptional()
-    isPublished?: boolean;
 
     @ApiPropertyOptional({
         description: '排序规则:可指定帖子列表的排序规则,默认为综合排序',

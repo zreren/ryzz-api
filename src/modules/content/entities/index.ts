@@ -6,3 +6,4 @@ export * from './feed.entity';
 export * from './report.entity';
 export * from './tag.entity';
 export * from './like.entity';
+export * from './postView.entity';

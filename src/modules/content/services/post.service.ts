@@ -1,19 +1,21 @@
 import { InternalServerErrorException } from '@nestjs/common';
 
-import { isArray, isFunction, isNil, omit } from 'lodash';
+import { isArray, isFunction, isNil, omit, sampleSize } from 'lodash';
 
-import { In, IsNull, Not, SelectQueryBuilder, EntityNotFoundError } from 'typeorm';
+import { In, SelectQueryBuilder, EntityNotFoundError } from 'typeorm';
 
 import { BaseService } from '@/modules/database/base';
 import { manualPaginate, paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 
-import { UserEntity } from '@/modules/user/entities';
+import { UserBanEntity, UserEntity } from '@/modules/user/entities';
 
-import { PostOrderType } from '../constants';
+import { TokenService } from '@/modules/user/services';
+
+import { Countries, PostOrderType } from '../constants';
 
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos/post.dto';
-import { CollectEntity } from '../entities';
+import { CollectEntity, PostUserViewRecordEntity } from '../entities';
 import { PostEntity } from '../entities/post.entity';
 import { CategoryRepository } from '../repositories/category.repository';
 import { PostRepository } from '../repositories/post.repository';
@@ -38,10 +40,134 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         protected repository: PostRepository,
         protected categoryRepository: CategoryRepository,
         protected categoryService: CategoryService,
+        private readonly tokenService: TokenService,
         protected searchService?: SearchService,
         protected search_type: SearchType = 'against',
     ) {
         super(repository);
+    }
+
+    /**
+     * 获取首页帖子列表
+     */
+    async getHomeList(requestToken: string, country: string, page = 1, limit = 10) {
+        // 登录用户
+        if (!isNil(requestToken)) {
+            const token = await this.tokenService.checkAccessToken(requestToken);
+            if (!isNil(token) && !isNil(token.user)) {
+                const posts = await this.getUserHomeList(token.user.id, country, limit);
+                if (posts.length > 0) {
+                    return posts;
+                }
+            }
+        }
+
+        // 普通分页数据
+        const orderBy = PostOrderType.PUBLISHED;
+        return this.paginate({ page, limit, orderBy });
+    }
+
+    /**
+     * 获取登录用户首页帖子列表
+     * 70%当地贴 + 30%其他贴
+     * @param userId
+     * @param clientCountry
+     * @param page
+     * @param count
+     */
+    async getUserHomeList(userId: string, clientCountry: string, limit = 10) {
+        if (isNil(clientCountry)) {
+            // todo 使用用户信息中的国家信息
+        }
+        const viewedPosts = await PostUserViewRecordEntity.query(
+            ...PostUserViewRecordEntity.createQueryBuilder(PostUserViewRecordEntity.name)
+                .where('userId = :userId', { userId })
+                .select(['postId'])
+                .getQueryAndParameters(),
+        );
+        const banedUsers = await UserBanEntity.query(
+            ...UserBanEntity.createQueryBuilder(UserBanEntity.name)
+                .where('userId = :userId', { userId })
+                .select(['banedUserId'])
+                .getQueryAndParameters(),
+        );
+        const viewedPostIds = viewedPosts
+            .map((item: any) => {
+                return item.postId;
+            })
+            .concat(['']);
+        const banedUserIds = banedUsers
+            .map((item: any) => {
+                return item.banedUserId;
+            })
+            .concat(['']);
+        console.log(`view post ids:${viewedPostIds.join(',')}`);
+        console.log(`ban user ids:${banedUserIds.join(',')}`);
+
+        const country =
+            clientCountry in Countries
+                ? Object.values(Countries)[Object.keys(Countries).indexOf(clientCountry)]
+                : 'bt';
+        const minPublishedAt = 0;
+        const sameQuery = PostEntity.createQueryBuilder(PostEntity.name)
+            .where('country = :country', { country })
+            .andWhere('userId NOT IN (:...banedUserIds)', { banedUserIds })
+            .andWhere('id NOT IN (:...viewedPostIds)', { viewedPostIds })
+            .andWhere('publishedAt > :minPublishedAt', { minPublishedAt })
+            .select(['id'])
+            .orderBy('publishedAt', 'DESC')
+            .limit(5000);
+        const sameCountryPosts = await PostEntity.query(...sameQuery.getQueryAndParameters());
+        const differentCountryPosts = await PostEntity.query(
+            ...PostEntity.createQueryBuilder(PostEntity.name)
+                .where('country != :country', { country })
+                .andWhere('userId NOT IN (:...banedUserIds)', { banedUserIds })
+                .andWhere('id NOT IN (:...viewedPostIds)', { viewedPostIds })
+                .andWhere('publishedAt > :minPublishedAt', { minPublishedAt })
+                .select(['id'])
+                .orderBy('publishedAt', 'DESC')
+                .limit(5000)
+                .getQueryAndParameters(),
+        );
+        const sameCountryPostIds = isNil(sameCountryPosts)
+            ? []
+            : sameCountryPosts.map((item: any) => {
+                  return item.id;
+              });
+        const differentCountryPostIds = isNil(differentCountryPosts)
+            ? []
+            : differentCountryPosts.map((item: any) => {
+                  return item.id;
+              });
+        console.log(`country: ${country}`);
+        console.log(`sameCountryPostIds:${sameCountryPostIds.join(',')}`);
+        console.log(`differentCountryPostIds:${differentCountryPostIds.join(',')}`);
+
+        const postSame = sampleSize(sameCountryPostIds, limit * 0.7);
+        const postDifferent = sampleSize(differentCountryPostIds, limit - postSame.length);
+        console.log(1);
+        console.log(postSame, postDifferent);
+        // 补齐数目
+        if (postDifferent.length < limit - postSame.length) {
+            const postSameNew = sampleSize(sameCountryPostIds, limit - postDifferent.length);
+            postSame.length = 0;
+            postSame.push(...postSameNew);
+        }
+        const postIds = postSame.concat(postDifferent);
+        if (postIds.length === 0) {
+            return [];
+        }
+
+        console.log(`results: ${postIds.join(',')}, ${postSame.join(',')}`);
+        const newViewedPosts = postIds.map((postId) => {
+            return {
+                postId,
+                userId,
+            };
+        });
+        PostUserViewRecordEntity.insert(newViewedPosts);
+
+        return this.repository.find({ where: { id: In(postIds) } });
     }
 
     /**
@@ -213,22 +339,12 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         options: FindParams,
         callback?: QueryHook<PostEntity>,
     ) {
-        const { category, orderBy, isPublished, search } = options;
+        const { category, orderBy, search } = options;
         const qb = await super.buildListQB(querBuilder, options, callback);
-        if (typeof isPublished === 'boolean') {
-            isPublished
-                ? qb.where({
-                      publishedAt: Not(IsNull()),
-                  })
-                : qb.where({
-                      publishedAt: IsNull(),
-                  });
-        }
         if (!isNil(search)) {
             if (this.search_type === 'like') {
                 qb.andWhere('title LIKE :search', { search: `%${search}%` })
                     .orWhere('body LIKE :search', { search: `%${search}%` })
-                    .orWhere('summary LIKE :search', { search: `%${search}%` })
                     .orWhere('post.categories LIKE :search', {
                         search: `%${search}%`,
                     });
@@ -237,9 +353,6 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                     search: `${search}*`,
                 })
                     .orWhere('MATCH(body) AGAINST (:search IN BOOLEAN MODE)', {
-                        search: `${search}*`,
-                    })
-                    .orWhere('MATCH(summary) AGAINST (:search IN BOOLEAN MODE)', {
                         search: `${search}*`,
                     })
                     .orWhere('MATCH(categories.name) AGAINST (:search IN BOOLEAN MODE)', {
@@ -267,14 +380,8 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 return qb.orderBy('post.publishedAt', 'DESC');
             case PostOrderType.COMMENTCOUNT:
                 return qb.orderBy('commentCount', 'DESC');
-            case PostOrderType.CUSTOM:
-                return qb.orderBy('customOrder', 'DESC');
             default:
-                return qb
-                    .orderBy('post.createdAt', 'DESC')
-                    .addOrderBy('post.updatedAt', 'DESC')
-                    .addOrderBy('post.publishedAt', 'DESC')
-                    .addOrderBy('commentCount', 'DESC');
+                return qb.orderBy('post.publishedAt', 'DESC');
         }
     }
 

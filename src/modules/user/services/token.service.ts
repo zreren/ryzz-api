@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import dayjs from 'dayjs';
 import { FastifyReply as Response } from 'fastify';
 import jwt from 'jsonwebtoken';
+import { MoreThanOrEqual } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 
 import { getTime } from '@/modules/core/helpers';
@@ -94,7 +95,7 @@ export class TokenService {
      */
     async checkAccessToken(value: string) {
         return AccessTokenEntity.findOne({
-            where: { value },
+            where: { value, expired_at: MoreThanOrEqual(new Date()) },
             relations: ['user', 'refreshToken'],
         });
     }
