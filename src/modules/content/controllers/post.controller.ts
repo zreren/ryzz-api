@@ -13,7 +13,13 @@ import { ReqUser } from '@/modules/user/decorators';
 import { UserEntity } from '@/modules/user/entities';
 
 import { ContentModule } from '../content.module';
-import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
+import {
+    CancelPostCollectDto,
+    CreatePostDto,
+    PostCollectDto,
+    QueryPostDto,
+    UpdatePostDto,
+} from '../dtos';
 import { LikeDto, UnlikeDto } from '../dtos/like.dto';
 import { FeedService, LikeService } from '../services';
 import { PostService } from '../services/post.service';
@@ -83,13 +89,13 @@ export class PostController extends BaseController<PostService> {
 
     @Post('collect')
     @ApiOperation({ summary: '收藏' })
-    async collect(@Body() data: LikeDto, @ReqUser() user: UserEntity) {
+    async collect(@Body() data: PostCollectDto, @ReqUser() user: UserEntity) {
         console.log('collect');
     }
 
     @Post('cancelCollect')
     @ApiOperation({ summary: '取消收藏' })
-    async cancelCollect(@Body() data: UnlikeDto, @ReqUser() user: UserEntity) {
+    async cancelCollect(@Body() data: CancelPostCollectDto, @ReqUser() user: UserEntity) {
         console.log('cancelCollect');
     }
 }
