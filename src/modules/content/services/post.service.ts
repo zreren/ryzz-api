@@ -8,9 +8,12 @@ import { BaseService } from '@/modules/database/base';
 import { manualPaginate, paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 
+import { UserEntity } from '@/modules/user/entities';
+
 import { PostOrderType } from '../constants';
 
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos/post.dto';
+import { CollectEntity } from '../entities';
 import { PostEntity } from '../entities/post.entity';
 import { CategoryRepository } from '../repositories/category.repository';
 import { PostRepository } from '../repositories/post.repository';
@@ -159,6 +162,44 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
             }
         }
         return result;
+    }
+
+    /**
+     * 收藏
+     * @param user
+     * @param postId
+     * @param collectId
+     */
+    async collect(user: UserEntity, postId: string, collectId: string) {
+        const collect = await CollectEntity.findOneBy({ id: collectId });
+        const post = await PostEntity.findOneBy({ id: postId });
+        if (isNil(post) || isNil(collect) || collect.user !== user) {
+            return;
+        }
+        this.repository
+            .createQueryBuilder('post')
+            .relation(CollectEntity, 'collects')
+            .of(post)
+            .add([collectId]);
+    }
+
+    /**
+     * 取消收藏
+     * @param user
+     * @param postId
+     * @param collectId
+     */
+    async cancelCollect(user: UserEntity, postId: string, collectId: string) {
+        const collect = await CollectEntity.findOneBy({ id: collectId });
+        const post = await PostEntity.findOneBy({ id: postId });
+        if (isNil(post) || isNil(collect) || collect.user !== user) {
+            return;
+        }
+        this.repository
+            .createQueryBuilder('post')
+            .relation(CollectEntity, 'collects')
+            .of(post)
+            .remove([collectId]);
     }
 
     /**

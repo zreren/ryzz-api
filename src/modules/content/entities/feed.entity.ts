@@ -6,32 +6,35 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
  */
 @Exclude()
 @Entity('content_feeds')
+@Index('uniq_user_post', ['user_id', 'post_id'], { unique: true })
+@Index('idx_author_user', ['author_id', 'user_id'])
+@Index('idx_publish_time_user', ['publish_time', 'user_id'])
 export class FeedEntity extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column({
         comment: '帖子ID',
-        type: Number,
-        default: 0,
-        unsigned: true,
+        type: String,
     })
-    post_id: number;
+    post_id: string;
+
+    @Column({
+        comment: '楼主ID',
+        type: String,
+    })
+    author_id: string;
 
     @Column({
         comment: '用户ID',
-        type: Number,
-        default: 0,
-        unsigned: true,
+        type: String,
     })
-    @Index('idx_user_id')
-    user_id: number;
+    user_id: string;
 
     @Column({
         comment: '发布时间戳',
         type: Number,
         unsigned: true,
     })
-    @Index('idx_publish_time')
     publish_time: number;
 }

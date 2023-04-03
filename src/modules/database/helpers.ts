@@ -182,7 +182,6 @@ export function manualPaginateWithItems<E extends ObjectLiteral>(
     if (page <= totalPages) {
         itemCount = page === totalPages ? totalItems - (totalPages - 1) * limit : limit;
     }
-    console.log(page, limit, totalItems, totalPages, itemCount);
     return {
         meta: {
             itemCount,

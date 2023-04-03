@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable, OnModuleInit } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isNil, isArray, omit } from 'lodash';
 import { EntityNotFoundError, In, SelectQueryBuilder } from 'typeorm';
 
@@ -14,6 +15,7 @@ import { ListQueryDto } from '@/modules/restful/dtos';
 import { UpdateAccountDto, UpdatePasswordDto } from '../dtos/account.dto';
 import { CreateUserDto, QueryUserDto, UpdateUserDto } from '../dtos/user.dto';
 import { UserEntity } from '../entities/user.entity';
+import { FollowEvent, UnfollowEvent } from '../events';
 import { decrypt, encrypt, getUserConfig } from '../helpers';
 import { UserRepository } from '../repositories/user.repository';
 import { UserConfig } from '../types';
@@ -37,6 +39,7 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
         protected roleRepository: RoleRepository,
         protected configure: Configure,
         protected readonly followService: FollowService,
+        protected readonly eventEmitter: EventEmitter2,
     ) {
         super(userRepository);
     }
@@ -214,16 +217,36 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
      * @param user_id
      */
     async follow(user: UserEntity, user_id: string) {
-        this.followService.follow(user.id, user_id);
+        const success = await this.followService.follow(user.id, user_id);
+        if (success) {
+            this.eventEmitter.emit(
+                'user.follow',
+                new FollowEvent({
+                    user_id: user.id,
+                    target_user_id: user_id,
+                }),
+            );
+        }
+        return success;
     }
 
     /**
-     * 关注
+     * 取关
      * @param user
      * @param user_id
      */
     async unfollow(user: UserEntity, user_id: string) {
-        this.followService.unfollow(user.id, user_id);
+        const success = await this.followService.unfollow(user.id, user_id);
+        if (success) {
+            this.eventEmitter.emit(
+                'user.unfollow',
+                new UnfollowEvent({
+                    user_id: user.id,
+                    target_user_id: user_id,
+                }),
+            );
+        }
+        return success;
     }
 
     /**

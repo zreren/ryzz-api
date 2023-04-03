@@ -18,31 +18,31 @@ import { LikeDto, UnlikeDto } from '../dtos/like.dto';
 import { FeedService, LikeService } from '../services';
 import { PostService } from '../services/post.service';
 
-@ApiTags('帖子')
+@ApiTags('收藏夹')
 @ApiBearerAuth()
 @Depends(ContentModule)
 @Crud(async () => ({
-    id: 'post',
+    id: 'collect',
     enabled: [
         {
             name: 'list',
-            option: createHookOption('文章查询,以分页模式展示'),
+            option: createHookOption('收藏夹查询,以分页模式展示'),
         },
         {
             name: 'detail',
-            option: createHookOption('文章详情'),
+            option: createHookOption('收藏夹详情'),
         },
         {
             name: 'store',
-            option: createHookOption('创建文章'),
+            option: createHookOption('创建收藏夹'),
         },
         {
             name: 'update',
-            option: createHookOption('更新文章'),
+            option: createHookOption('更新收藏夹'),
         },
         {
             name: 'delete',
-            option: createHookOption('删除文章'),
+            option: createHookOption('删除收藏夹'),
         },
     ],
     dtos: {
@@ -51,8 +51,8 @@ import { PostService } from '../services/post.service';
         list: QueryPostDto,
     },
 }))
-@Controller('posts')
-export class PostController extends BaseController<PostService> {
+@Controller('collects')
+export class CollectController extends BaseController<PostService> {
     constructor(
         protected service: PostService,
         private readonly feedService: FeedService,

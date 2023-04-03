@@ -109,13 +109,11 @@ export class PostEntity extends BaseEntity {
     location: string;
 
     @Expose()
-    @Column({ comment: '经度', scale: 6 })
-    @Type(() => Number)
+    @Column({ comment: '经度', type: 'decimal' })
     longitude: number;
 
     @Expose()
-    @Column({ comment: '维度', scale: 6 })
-    @Type(() => Number)
+    @Column({ comment: '维度', type: 'decimal' })
     latitude: number;
 
     @Expose()
