@@ -174,3 +174,19 @@ export class UserUnfollowDto {
     @IsOptional({ always: true })
     user?: string;
 }
+
+@Injectable()
+export class BanDto {
+    @ApiPropertyOptional({
+        description: '被拉黑的用户ID',
+        type: String,
+    })
+    @IsUUID(undefined, {
+        always: true,
+        message: '用户ID格式不正确',
+    })
+    user?: string;
+}
+
+@Injectable()
+export class CancelBanDto extends BanDto {}

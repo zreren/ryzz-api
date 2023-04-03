@@ -33,7 +33,9 @@ import { Guest, ReqUser } from '../decorators';
 
 import {
     AccountBoundDto,
+    BanDto,
     BoundEmailCaptchaDto,
+    CancelBanDto,
     UpdateAccountDto,
     UpdatePasswordDto,
     UploadAvatarDto,
@@ -203,5 +205,17 @@ export class AccountController {
     @ApiOperation({ summary: '取关' })
     async unfollow(@Body() data: UserFollowDto, @ReqUser() user: ClassToPlain<UserEntity>) {
         return this.userService.unfollow(user, data.user);
+    }
+
+    @Post('ban')
+    @ApiOperation({ summary: '拉黑' })
+    async ban(@Body() data: BanDto, @ReqUser() user: UserEntity) {
+        return this.userService.ban(user, data.user);
+    }
+
+    @Post('cancelBan')
+    @ApiOperation({ summary: '取消拉黑' })
+    async cancelBan(@Body() data: CancelBanDto, @ReqUser() user: UserEntity) {
+        return this.userService.cancelBan(user.id, data.user);
     }
 }

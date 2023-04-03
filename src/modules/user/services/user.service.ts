@@ -14,6 +14,7 @@ import { ListQueryDto } from '@/modules/restful/dtos';
 
 import { UpdateAccountDto, UpdatePasswordDto } from '../dtos/account.dto';
 import { CreateUserDto, QueryUserDto, UpdateUserDto } from '../dtos/user.dto';
+import { UserBanEntity } from '../entities';
 import { UserEntity } from '../entities/user.entity';
 import { FollowEvent, UnfollowEvent } from '../events';
 import { decrypt, encrypt, getUserConfig } from '../helpers';
@@ -298,6 +299,40 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
                 ? await this.followService.getFollowingCount(user_id)
                 : await this.followService.getFollowerCount(user_id);
         return manualPaginateWithItems({ page, limit }, data, totalItems);
+    }
+
+    /**
+     * 拉黑
+     * @param user
+     * @param banedUserId
+     */
+    async ban(user: UserEntity, banedUserId: string) {
+        const banedUser = await UserEntity.findOneBy({ id: banedUserId });
+        if (isNil(banedUser) || user === banedUser) {
+            return;
+        }
+        UserBanEntity.createQueryBuilder(UserBanEntity.name)
+            .insert()
+            .orIgnore()
+            .updateEntity(false)
+            .values({
+                user,
+                baned_user: banedUser,
+                create_time: Date.now() / 1000,
+            })
+            .execute();
+    }
+
+    /**
+     * 取消拉黑
+     * @param userId
+     * @param banedUserId
+     */
+    async cancelBan(userId: string, banedUserId: string) {
+        UserBanEntity.createQueryBuilder(UserBanEntity.name)
+            .delete()
+            .where('userId = :userId AND banedUserId = :banedUserId', { userId, banedUserId })
+            .execute();
     }
 
     /**
