@@ -59,7 +59,7 @@ export class PostListener {
         console.log(`post ${payload.post_id} cancelCollect`);
         PostEntity.createQueryBuilder(PostEntity.name)
             .where('id = :id', { id: payload.post_id })
-            .where('collectCount > :count', { count: 0 })s
+            .where('collectCount > :count', { count: 0 })
             .update(PostEntity)
             .set({
                 collectCount: () => 'collectCount - 1',
