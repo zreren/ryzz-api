@@ -11,6 +11,7 @@ import {
     PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { PostEntity } from '@/modules/content/entities';
 import { App } from '@/modules/core/app';
 import { AddRelations } from '@/modules/database/decorators/dynamic-relation.decorator';
 import { DynamicRelation } from '@/modules/database/types';
@@ -40,6 +41,13 @@ export class MediaEntity extends BaseEntity {
         onUpdate: 'CASCADE',
     })
     user?: UserEntity;
+
+    @ManyToOne((type) => PostEntity, (post) => post.medias, {
+        nullable: true,
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
+    post?: PostEntity;
 
     @Expose()
     @Type(() => Date)

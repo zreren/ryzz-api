@@ -14,6 +14,7 @@ import {
 
 import { BaseEntity } from '@/modules/database/base';
 
+import { MediaEntity } from '@/modules/media/entities';
 import { UserEntity } from '@/modules/user/entities';
 
 import { Countries, PostType } from '../constants';
@@ -172,6 +173,9 @@ export class PostEntity extends BaseEntity {
         cascade: true,
     })
     reports: PostReportEntity[];
+
+    @OneToMany(() => MediaEntity, (media) => media.post)
+    medias: MediaEntity[];
 
     @Expose()
     @Type(() => Date)
