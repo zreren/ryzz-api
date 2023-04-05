@@ -1,4 +1,4 @@
-import { ModuleMetadata } from '@nestjs/common';
+import { Logger, ModuleMetadata } from '@nestjs/common';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -35,6 +35,7 @@ import { SearchType } from './types';
                 CategoryRepository,
                 CategoryService,
                 TokenService,
+                Logger,
                 { token: SearchService, optional: true },
             ],
             useFactory(
@@ -42,6 +43,7 @@ import { SearchType } from './types';
                 categoryRepository: CategoryRepository,
                 categoryService: CategoryService,
                 tokenService: TokenService,
+                logger: Logger,
                 searchService?: SearchService,
             ) {
                 return new PostService(
@@ -49,6 +51,7 @@ import { SearchType } from './types';
                     categoryRepository,
                     categoryService,
                     tokenService,
+                    logger,
                     searchService,
                     searchType,
                 );
@@ -57,6 +60,7 @@ import { SearchType } from './types';
         FollowService,
         TokenService,
         JwtService,
+        Logger,
     ];
     if (configure.has('elastic') && searchType === 'elastic') providers.push(SearchService);
     return {

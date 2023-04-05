@@ -1,11 +1,11 @@
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
 
 import { isArray, isFunction, isNil, omit, sampleSize } from 'lodash';
 
 import { In, SelectQueryBuilder, EntityNotFoundError } from 'typeorm';
 
 import { BaseService } from '@/modules/database/base';
-import { manualPaginate, paginate } from '@/modules/database/helpers';
+import { manualPaginate, manualPaginateWithItems, paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 
 import { UserBanEntity, UserEntity } from '@/modules/user/entities';
@@ -41,6 +41,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         protected categoryRepository: CategoryRepository,
         protected categoryService: CategoryService,
         private readonly tokenService: TokenService,
+        private readonly logger: Logger,
         protected searchService?: SearchService,
         protected search_type: SearchType = 'against',
     ) {
@@ -57,7 +58,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
             if (!isNil(token) && !isNil(token.user)) {
                 const posts = await this.getUserHomeList(token.user.id, country, limit);
                 if (posts.length > 0) {
-                    return posts;
+                    return manualPaginateWithItems({ page, limit }, posts, 0);
                 }
             }
         }
@@ -101,9 +102,6 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 return item.banedUserId;
             })
             .concat(['']);
-        console.log(`view post ids:${viewedPostIds.join(',')}`);
-        console.log(`ban user ids:${banedUserIds.join(',')}`);
-
         const country =
             clientCountry in Countries
                 ? Object.values(Countries)[Object.keys(Countries).indexOf(clientCountry)]
@@ -139,14 +137,9 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
             : differentCountryPosts.map((item: any) => {
                   return item.id;
               });
-        console.log(`country: ${country}`);
-        console.log(`sameCountryPostIds:${sameCountryPostIds.join(',')}`);
-        console.log(`differentCountryPostIds:${differentCountryPostIds.join(',')}`);
 
         const postSame = sampleSize(sameCountryPostIds, limit * 0.7);
         const postDifferent = sampleSize(differentCountryPostIds, limit - postSame.length);
-        console.log(1);
-        console.log(postSame, postDifferent);
         // 补齐数目
         if (postDifferent.length < limit - postSame.length) {
             const postSameNew = sampleSize(sameCountryPostIds, limit - postDifferent.length);
@@ -158,7 +151,6 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
             return [];
         }
 
-        console.log(`results: ${postIds.join(',')}, ${postSame.join(',')}`);
         const newViewedPosts = postIds.map((postId) => {
             return {
                 postId,
@@ -167,6 +159,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         });
         PostUserViewRecordEntity.insert(newViewedPosts);
 
+        this.logger.warn('test', 'post');
         return this.repository.find({ where: { id: In(postIds) } });
     }
 

@@ -7,6 +7,7 @@ import Email from 'email-templates';
 import { RedisOptions as IoRedisOptions } from 'ioredis';
 import { Attachment } from 'nodemailer/lib/mailer';
 import { Ora } from 'ora';
+import { LoggerOptions } from 'winston';
 import { CommandModule } from 'yargs';
 
 import { Configure } from './configure';
@@ -411,3 +412,8 @@ export interface SmtpSendParams {
     // 附件
     attachments?: Attachment[];
 }
+
+/**
+ * winston配置
+ */
+export type WinstonConfig<T extends NestedRecord = RecordNever> = LoggerOptions & T;

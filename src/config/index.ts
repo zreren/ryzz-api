@@ -6,3 +6,4 @@ export * from '../routes';
 export * from './user.config';
 export * from './smtp.config';
 export * from './redis.config';
+export * from './winsonLogger.config';

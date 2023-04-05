@@ -126,6 +126,7 @@ export const paginate = async <E extends ObjectLiteral>(
             perPage: options.limit,
             totalPages,
             currentPage: options.page,
+            nextPage: itemCount > 0 ? options.page + 1 : 0,
         },
     };
 };
@@ -158,6 +159,7 @@ export function manualPaginate<E extends ObjectLiteral>(
             perPage: limit,
             totalPages,
             currentPage: page,
+            nextPage: itemCount > 0 ? page + 1 : 0,
         },
         items,
     };
@@ -178,10 +180,7 @@ export function manualPaginateWithItems<E extends ObjectLiteral>(
     const totalRst = totalItems / limit;
     const totalPages =
         totalRst > Math.floor(totalRst) ? Math.floor(totalRst) + 1 : Math.floor(totalRst);
-    let itemCount = 0;
-    if (page <= totalPages) {
-        itemCount = page === totalPages ? totalItems - (totalPages - 1) * limit : limit;
-    }
+    const itemCount = items.length;
     return {
         meta: {
             itemCount,
@@ -189,6 +188,7 @@ export function manualPaginateWithItems<E extends ObjectLiteral>(
             perPage: limit,
             totalPages,
             currentPage: page,
+            nextPage: itemCount > 0 ? page + 1 : 0,
         },
         items,
     };

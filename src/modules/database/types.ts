@@ -114,6 +114,10 @@ export interface PaginateMeta {
      * 当前页数
      */
     currentPage: number;
+    /**
+     * 下一页，0代表无下一页
+     */
+    nextPage?: number;
 }
 /**
  * 分页选项
