@@ -11,7 +11,8 @@ import YAML from 'yaml';
 
 import { EnvironmentType } from '@/modules/core/constants';
 
-import { BaseSeeder } from '../base';
+// import { BaseSeeder } from '../base';
+import BaseSeeder from '../base/testSeeder';
 import { getDbConfig } from '../helpers';
 import { DbFactory } from '../types';
 
