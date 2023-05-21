@@ -1,0 +1,46 @@
+kind: pipeline
+type: docker
+name: default
+steps:
+    - name: build
+      image: node
+      commands:
+          - npm i -g @nestjs/cli
+          - npm i
+          - npm run build
+          - cp package.json ./dist
+          - cp package-lock.json ./dist
+          - cd ./dist && npm i
+    - name: upload
+      image: appleboy/drone-scp
+      settings:
+          host: 45.125.34.94
+          username: pincman
+          key:
+              from_secret: ssh_key
+          port: 22
+          command_timeout: 2m
+          target: /tmp/miint-api
+          source:
+              - ./dist
+    - name: deploy
+      image: appleboy/drone-ssh
+      environment:
+          ENV_VARS:
+              from_secret: env_vars
+      settings:
+          host: 45.125.34.94
+          username: pincman
+          key:
+              from_secret: ssh_key
+          port: 22
+          command_timeout: 2m
+          envs: [ENV_VARS]
+          script:
+              - mv /tmp/miint-api/dist /home/pincman/htdocs/miint/api
+              - cd /home/pincman/htdocs/miint/api
+              - echo "$${ENV_VARS}" > .env
+              - rm -rf /tmp/miint-api
+              - 'source ~/.zshrc; cd .. && pm2 restart ecosystem.config.js'
+              #   - $HOME/.local/share/pnpm/node ./main.js dbmr -s
+              #   - $HOME/.local/share/pnpm/pm2 restart miint-api

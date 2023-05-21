@@ -13,11 +13,12 @@ import { MediaModule } from './modules/media/media.module';
 import { RbacGuard } from './modules/rbac/guards';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { UserModule } from './modules/user/user.module';
+import { WsModule } from './modules/ws/ws.module';
 
 export const creator = createApp({
     configs,
     configure: { storage: true },
-    modules: [ContentModule, RbacModule, UserModule, MediaModule],
+    modules: [ContentModule, RbacModule, UserModule, MediaModule, WsModule],
     builder: async ({ configure, BootModule }) => {
         return NestFactory.create<NestFastifyApplication>(BootModule, new FastifyAdapter(), {
             cors: true,
