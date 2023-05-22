@@ -37,6 +37,7 @@ steps:
           command_timeout: 2m
           envs: [ENV_VARS]
           script:
+              - mkdir -p /home/pincman/htdocs/miint/api && rm -rf /home/pincman/htdocs/miint/api
               - mv /tmp/miint-api/dist /home/pincman/htdocs/miint/api
               - cd /home/pincman/htdocs/miint/api
               - echo "$${ENV_VARS}" > .env
