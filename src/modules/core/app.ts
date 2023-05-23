@@ -41,11 +41,12 @@ export class App {
      * 创建一个应用
      * @param options 应用创建选项
      */
-    static async create(options: CreateOptions): Promise<CreatorData> {
+    static async create(options: CreateOptions, cli = false): Promise<CreatorData> {
         const { builder, configs, configure, commands = [] } = options;
         let modules = {};
         try {
             this._configure = await this.buildConfigure(configs, configure);
+            this._configure.set('cli', cli);
             const { BootModule, modules: maps } = await createBootModule(
                 { configure: this._configure },
                 options,

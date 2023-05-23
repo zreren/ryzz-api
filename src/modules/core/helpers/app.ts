@@ -39,7 +39,7 @@ import { CreateModule, isAsyncFn, mergeMeta } from './utils';
  * @param options
  */
 export function createApp(options: CreateOptions): Creator {
-    return async () => App.create(options);
+    return async (cli = false) => App.create(options, cli);
 }
 
 /**
@@ -183,8 +183,8 @@ export async function createCommands(params: CreatorData): Promise<CommandModule
     return commands;
 }
 
-export async function buildCli(builder: () => Promise<CreatorData>) {
-    const params = await builder();
+export async function buildCli(builder: (cli?: boolean) => Promise<CreatorData>) {
+    const params = await builder(true);
     const commands = await createCommands(params);
     commands.forEach((command) => yargs.command(command));
     yargs

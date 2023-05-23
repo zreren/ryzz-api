@@ -89,7 +89,7 @@ export class RbacResolver<A extends AbilityTuple = AbilityTuple, C extends Mongo
     }
 
     async onApplicationBootstrap() {
-        if (!this.configure.get<boolean>('app.server', true)) return null;
+        if (this.configure.get<boolean>('cli', true)) return null;
         const queryRunner = this.dataSource.createQueryRunner();
 
         await queryRunner.connect();

@@ -14,7 +14,6 @@ if (existsSync(projectPath)) {
     });
     require('tsconfig-paths/register');
 }
-
 const { creator } = require('./creator');
 const { buildCli } = require('./modules/core/helpers/app');
 
