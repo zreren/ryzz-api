@@ -46,7 +46,7 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
     }
 
     async onModuleInit() {
-        if (this.configure.get<boolean>('cli', true)) return null;
+        // if (this.configure.get<boolean>('cli', true)) return null;
         const adminConf = await getUserConfig<UserConfig['super']>('super');
         const admin = await this.findOneByCredential(adminConf.username);
         if (!isNil(admin)) {
