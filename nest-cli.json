@@ -5,6 +5,15 @@
     "compilerOptions": {
         "deleteOutDir": true,
         "assets": ["assets"],
-        "watchAssets": true
+        "watchAssets": true,
+        "plugins": [
+            {
+              "name": "@nestjs/swagger",
+              "options": {
+                "classValidatorShim": false,
+                "introspectComments": true
+              }
+            }
+          ]
     }
 }

@@ -66,6 +66,13 @@ export class CreatePostDto {
     @IsOptional({ groups: ['update'] })
     body!: string;
 
+    /**
+     * 图片路径列表
+     * @example ['a.png', 'b.png']
+     */
+    @IsOptional()
+    imagePaths?: string[];
+
     @ApiPropertyOptional({
         description: '关联分类ID列表:一篇帖子可以关联多个分类',
         type: [String],

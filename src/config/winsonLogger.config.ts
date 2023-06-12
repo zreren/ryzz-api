@@ -1,7 +1,7 @@
-import { ConfigureRegister, WinstonConfig } from '@/modules/core/types';
-
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
+
+import { ConfigureRegister, WinstonConfig } from '@/modules/core/types';
 
 export const winstonLogger: ConfigureRegister<WinstonConfig> = (configure) => ({
     transports: [

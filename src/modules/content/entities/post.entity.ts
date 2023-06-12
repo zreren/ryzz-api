@@ -1,5 +1,6 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 import {
+    AfterLoad,
     Column,
     CreateDateColumn,
     DeleteDateColumn,
@@ -60,6 +61,12 @@ export class PostEntity extends BaseEntity {
     @Column({ comment: '帖子内容', type: 'longtext' })
     @Index({ fulltext: true })
     body: string;
+
+    @Column({ comment: '图片列表', type: 'simple-array' })
+    imagePaths?: string[];
+
+    @Expose()
+    imageUrls?: string[];
 
     @Expose()
     @Column({
@@ -183,4 +190,10 @@ export class PostEntity extends BaseEntity {
         comment: '删除时间',
     })
     deletedAt: Date;
+
+    @AfterLoad()
+    generateImageUrls(): void {
+        // todo 腾讯cos
+        this.imageUrls = this.imagePaths.map((path) => `http://xxx/${path}`);
+    }
 }

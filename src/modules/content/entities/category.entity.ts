@@ -1,5 +1,6 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 import {
+    AfterLoad,
     Column,
     DeleteDateColumn,
     Entity,
@@ -25,6 +26,12 @@ export class CategoryEntity extends BaseEntity {
     @Column({ comment: '分类名称' })
     @Index({ fulltext: true })
     name: string;
+
+    @Column({ comment: '封面图片路径' })
+    coverPath: string;
+
+    @Expose()
+    coverUrl: string;
 
     @Expose({ groups: ['category-tree', 'category-list', 'category-detail'] })
     @Column({ comment: '分类排序', default: 0 })
@@ -52,4 +59,9 @@ export class CategoryEntity extends BaseEntity {
         comment: '删除时间',
     })
     deletedAt: Date;
+
+    @AfterLoad()
+    generateCoverUrl(): void {
+        this.coverUrl = `http://xxx/${this.coverPath}`;
+    }
 }

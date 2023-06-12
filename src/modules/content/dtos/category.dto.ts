@@ -60,6 +60,14 @@ export class CreateCategoryDto {
     @IsOptional({ groups: ['update'] })
     name!: string;
 
+    /**
+     * 封面图片路径
+     * @example a.png
+     */
+    @IsNotEmpty({ groups: ['create'], message: '封面不得为空' })
+    @IsOptional({ groups: ['update'] })
+    coverPath!: string;
+
     @ApiProperty({
         description: '父分类ID',
     })

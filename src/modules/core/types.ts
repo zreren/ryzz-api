@@ -417,3 +417,14 @@ export interface SmtpSendParams {
  * winston配置
  */
 export type WinstonConfig<T extends NestedRecord = RecordNever> = LoggerOptions & T;
+
+/**
+ * 腾讯cos配置
+ */
+export interface TencentCloudCosConfig {
+    secretId: string;
+    secretKey: string;
+    bucket: string;
+    region: string;
+    durationSeconds?: number;
+}
