@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
-import { isNil } from 'lodash';
 
 import { TokenService } from '../services/token.service';
+import { SocketWithUserData } from '@/modules/ws/types';
+import { isClientAliveNow } from '@/modules/ws/helper';
 
 /**
  * 用于WebSocket的用户JWT认证守卫,检测用户是否已登录
@@ -15,15 +15,10 @@ export class JwtWsGuard implements CanActivate {
      * 守卫方法
      * @param context
      */
-    async canActivate(context: ExecutionContext) {
-        const { token } = context.switchToWs().getData() || {};
-        if (!token) {
-            throw new WsException('Missing access token');
-        }
-        // 判断token是否存在,如果不存在则认证失败
-        const accessToken = await this.tokenService.checkAccessToken(token);
-        if (!accessToken) throw new WsException('Access token incorrect');
-        const user = await this.tokenService.verifyAccessToken(accessToken);
-        return !isNil(user);
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const client = context.switchToWs()?.getClient<SocketWithUserData>();
+        const active = isClientAliveNow(client.user.lastActiveTime);
+        active || client.disconnect();
+        return active;
     }
 }

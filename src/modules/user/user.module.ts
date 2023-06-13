@@ -38,7 +38,10 @@ const queue = Object.values(queueMaps);
         addEntities(configure, entities),
         DatabaseModule.forRepository(repositories),
         PassportModule,
-        serviceMaps.AuthService.jwtModuleFactory(),
+        {
+            ...serviceMaps.AuthService.jwtModuleFactory(),
+            global: true,
+        },
         BullModule.registerQueue({
             name: SEND_CAPTCHA_QUEUE,
         }),
