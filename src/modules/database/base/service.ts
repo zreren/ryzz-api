@@ -2,6 +2,8 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { isNil } from 'lodash';
 import { In, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 
+import { UserEntity } from '@/modules/user/entities';
+
 import { SelectTrashMode, TreeChildrenResolve } from '../constants';
 import { manualPaginate, paginate } from '../helpers';
 import { QueryHook, ServiceListQueryOption, PaginateReturn, PaginateOptions } from '../types';
@@ -100,7 +102,7 @@ export abstract class BaseService<
      * @param data 请求数据
      * @param others 其它参数
      */
-    create(data: any, ...others: any[]): Promise<E> {
+    create(data: any, user?: UserEntity, ...others: any[]): Promise<E> {
         throw new ForbiddenException(`Can not to create ${this.repository.qbName}!`);
     }
 

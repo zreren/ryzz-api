@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isNil } from 'lodash';
 
 import { In } from 'typeorm';
@@ -9,6 +10,7 @@ import { UserEntity } from '@/modules/user/entities';
 import { UserRepository } from '@/modules/user/repositories';
 
 import { PostEntity, PostLikeEntity } from '../entities';
+import { PostLikeEvent } from '../events';
 import { PostRepository } from '../repositories';
 
 /**
@@ -19,6 +21,7 @@ export class LikeService {
     constructor(
         private readonly userRepository: UserRepository,
         private readonly postRepository: PostRepository,
+        protected readonly eventEmitter?: EventEmitter2,
     ) {}
 
     /**
@@ -27,19 +30,33 @@ export class LikeService {
      * @param post_id 帖子ID
      */
     async like(user: UserEntity, post_id: string) {
-        const post = await PostEntity.findOneBy({ id: post_id });
+        const post = await PostEntity.findOne({ where: { id: post_id }, relations: ['user'] });
         if (isNil(post)) {
             return;
         }
-        PostLikeEntity.createQueryBuilder(PostLikeEntity.name)
+        const now = new Date();
+        const result = await PostLikeEntity.createQueryBuilder(PostLikeEntity.name)
             .insert()
             .orIgnore()
             .updateEntity(false)
             .values({
                 user,
                 post,
+                createdAt: now,
             })
             .execute();
+
+        if (result.raw.affectedRows === 1) {
+            this.eventEmitter.emit(
+                'post.like',
+                new PostLikeEvent({
+                    post_id: post.id,
+                    user_id: user.id,
+                    target_user_id: post.user.id,
+                    created_at: now,
+                }),
+            );
+        }
     }
 
     /**

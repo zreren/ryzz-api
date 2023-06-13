@@ -26,10 +26,10 @@ import { UserEntity } from '../entities/user.entity';
 export class GuestDto {
     @ApiProperty({
         description: '登录凭证:可以是用户名,手机号,邮箱地址',
-        minLength: 4,
+        minLength: 3,
         maxLength: 20,
     })
-    @Length(4, 30, {
+    @Length(3, 30, {
         message: '登录凭证长度必须为$constraint1到$constraint2',
         always: true,
     })
@@ -38,7 +38,7 @@ export class GuestDto {
 
     @ApiProperty({
         description: '用户名',
-        minLength: 4,
+        minLength: 3,
         maxLength: 30,
         uniqueItems: true,
     })
@@ -56,7 +56,7 @@ export class GuestDto {
             message: '该用户名已被注册',
         },
     )
-    @Length(4, 30, {
+    @Length(3, 30, {
         always: true,
         message: '用户名长度必须为$constraint1到$constraint2',
     })

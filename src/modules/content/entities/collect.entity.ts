@@ -5,13 +5,11 @@ import {
     DeleteDateColumn,
     Entity,
     Index,
-    ManyToMany,
     ManyToOne,
     UpdateDateColumn,
 } from 'typeorm';
 
 import { BaseEntity } from '@/modules/database/base';
-
 import { UserEntity } from '@/modules/user/entities';
 
 import { PostEntity } from './post.entity';
@@ -30,10 +28,6 @@ export class CollectEntity extends BaseEntity {
     })
     @Index('idx_uid')
     user: UserEntity;
-
-    @Expose()
-    @ManyToMany((type) => PostEntity, (post) => post.collects)
-    posts: PostEntity[];
 
     @Expose()
     @Column({ comment: '收藏夹名称' })
@@ -60,4 +54,23 @@ export class CollectEntity extends BaseEntity {
         comment: '删除时间',
     })
     deletedAt: Date;
+}
+
+@Entity('content_collect_posts')
+@Index('uniq_collect_post', ['collect', 'post'], { unique: true })
+export class CollectPostEntity extends BaseEntity {
+    @Expose()
+    @ManyToOne(() => CollectEntity)
+    collect: CollectEntity;
+
+    @Expose()
+    @ManyToOne(() => PostEntity)
+    post: PostEntity;
+
+    @Expose()
+    @Type(() => Date)
+    @CreateDateColumn({
+        comment: '创建时间',
+    })
+    createdAt: Date;
 }

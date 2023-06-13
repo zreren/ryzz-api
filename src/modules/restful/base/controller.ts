@@ -1,5 +1,8 @@
 import { Body, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 
+import { ReqUser } from '@/modules/user/decorators';
+import { UserEntity } from '@/modules/user/entities';
+
 import { DeleteDto, ListQueryDto } from '../dtos';
 
 /**
@@ -28,12 +31,8 @@ export abstract class BaseController<S> {
         return (this.service as any).detail(id);
     }
 
-    async store(
-        @Body()
-        data: any,
-        ...args: any[]
-    ) {
-        return (this.service as any).create(data);
+    async store(@Body() data: any, @ReqUser() user: UserEntity, ...args: any[]) {
+        return (this.service as any).create(data, user, args);
     }
 
     async update(

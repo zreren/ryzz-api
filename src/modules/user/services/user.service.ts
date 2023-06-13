@@ -52,11 +52,31 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
         if (!isNil(admin)) {
             if (!admin.isCreator) {
                 await UserEntity.save({ id: admin.id, isCreator: true });
-                return this.findOneByCredential(adminConf.username);
+                this.findOneByCredential(adminConf.username);
             }
-            return admin;
+        } else {
+            this.create({ ...adminConf, isCreator: true } as any);
         }
-        return this.create({ ...adminConf, isCreator: true } as any);
+
+        if (process.env.NODE_ENV === 'development') {
+            const users = await getUserConfig<UserConfig['users']>('users');
+            if (!isNil(users)) {
+                UserEntity.createQueryBuilder()
+                    .insert()
+                    .orIgnore()
+                    .values(
+                        (await Promise.all(
+                            users.map(async (user) => {
+                                user.password = await encrypt(user.password);
+                                return user;
+                            }),
+                        )) as any,
+                    )
+                    .execute();
+            }
+        }
+
+        return admin;
     }
 
     /**

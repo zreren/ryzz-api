@@ -15,6 +15,16 @@ export const user: ConfigureFactory<UserConfig> = {
                 username: configure.env('SUPER_ADMIN_USERNAME', 'admin'),
                 password: configure.env('SUPER_ADMIN_PASSWORD', '123456aA$'),
             },
+            users: [
+                {
+                    username: 'Jim',
+                    password: '123456aA$',
+                },
+                {
+                    username: 'John',
+                    password: '123456aA$',
+                },
+            ],
             hash: 10,
             jwt: {
                 secret: 'my-secret',

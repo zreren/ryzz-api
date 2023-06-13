@@ -9,7 +9,7 @@ import { CollectEntity } from '../entities';
 import { CollectRepository } from '../repositories';
 
 /**
- * 分类数据操作
+ * 收藏夹数据操作
  */
 @Injectable()
 export class CollectService extends BaseService<CollectEntity, CollectRepository> {
@@ -18,7 +18,7 @@ export class CollectService extends BaseService<CollectEntity, CollectRepository
     }
 
     /**
-     * 新增分类
+     * 新增收藏夹
      * @param data
      */
     async create(data: CreateCollectDto) {
@@ -29,7 +29,7 @@ export class CollectService extends BaseService<CollectEntity, CollectRepository
     }
 
     /**
-     * 更新分类
+     * 更新收藏夹
      * @param data
      */
     async update(data: UpdateCollectDto) {

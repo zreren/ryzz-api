@@ -1,5 +1,6 @@
 import { InternalServerErrorException, Logger } from '@nestjs/common';
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isArray, isFunction, isNil, omit, sampleSize } from 'lodash';
 
 import { In, SelectQueryBuilder, EntityNotFoundError } from 'typeorm';
@@ -15,8 +16,9 @@ import { TokenService } from '@/modules/user/services';
 import { Countries, PostOrderType } from '../constants';
 
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos/post.dto';
-import { CollectEntity, PostUserViewRecordEntity } from '../entities';
+import { CollectEntity, CollectPostEntity, PostUserViewRecordEntity } from '../entities';
 import { PostEntity } from '../entities/post.entity';
+import { PostCollectEvent } from '../events';
 import { CategoryRepository } from '../repositories/category.repository';
 import { PostRepository } from '../repositories/post.repository';
 
@@ -44,6 +46,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         private readonly logger: Logger,
         protected searchService?: SearchService,
         protected search_type: SearchType = 'against',
+        protected readonly eventEmitter?: EventEmitter2,
     ) {
         super(repository);
     }
@@ -203,7 +206,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      * 创建文章
      * @param data
      */
-    async create(data: CreatePostDto) {
+    async create(data: CreatePostDto, user: UserEntity) {
         const createPostDto = {
             ...data,
             // 文章所属分类
@@ -212,6 +215,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                       id: In(data.categories),
                   })
                 : [],
+            user,
         };
         const item = await this.repository.save(createPostDto);
         if (!isNil(this.searchService)) {
@@ -291,15 +295,33 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      */
     async collect(user: UserEntity, postId: string, collectId: string) {
         const collect = await CollectEntity.findOneBy({ id: collectId });
-        const post = await PostEntity.findOneBy({ id: postId });
+        const post = await PostEntity.findOne({ where: { id: postId }, relations: ['user'] });
         if (isNil(post) || isNil(collect) || collect.user !== user) {
             return;
         }
-        this.repository
-            .createQueryBuilder('post')
-            .relation(CollectEntity, 'collects')
-            .of(post)
-            .add([collectId]);
+        const now = new Date();
+        const result = await CollectPostEntity.createQueryBuilder('collect_post')
+            .insert()
+            .orIgnore()
+            .updateEntity(false)
+            .values({
+                collect,
+                post,
+                createdAt: now,
+            })
+            .execute();
+        if (result.raw.affectedRows === 1) {
+            this.eventEmitter.emit(
+                'post.collect',
+                new PostCollectEvent({
+                    post_id: post.id,
+                    collect_id: collect.id,
+                    user_id: user.id,
+                    target_user_id: post.user.id,
+                    created_at: now,
+                }),
+            );
+        }
     }
 
     /**
@@ -309,16 +331,11 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      * @param collectId
      */
     async cancelCollect(user: UserEntity, postId: string, collectId: string) {
-        const collect = await CollectEntity.findOneBy({ id: collectId });
-        const post = await PostEntity.findOneBy({ id: postId });
-        if (isNil(post) || isNil(collect) || collect.user !== user) {
-            return;
-        }
-        this.repository
-            .createQueryBuilder('post')
-            .relation(CollectEntity, 'collects')
-            .of(post)
-            .remove([collectId]);
+        CollectPostEntity.createQueryBuilder()
+            .where('postId = :postId', { postId })
+            .andWhere('collectId = :collectId', { collectId })
+            .delete()
+            .execute();
     }
 
     /**

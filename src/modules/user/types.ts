@@ -13,6 +13,10 @@ export interface UserConfig {
         username: string;
         password: string;
     };
+    users: {
+        username: string;
+        password: string;
+    }[];
     hash?: number;
     jwt: JwtConfig;
     captcha?: CustomCaptchaConfig;

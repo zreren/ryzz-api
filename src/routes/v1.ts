@@ -1,5 +1,6 @@
 import * as contentControllers from '@/modules/content/controllers';
 import { Configure } from '@/modules/core/configure';
+import { NoticeController } from '@/modules/notice/notice.controller';
 import { ApiVersionOption } from '@/modules/restful/types';
 import * as userControllers from '@/modules/user/controllers';
 
@@ -23,6 +24,7 @@ export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
                         description: '用户登录后对账户进行的更改密码,换绑邮箱等一系列操作',
                     },
                     { name: 'Auth操作', description: '用户登录,登出,注册,发送找回密码等操作' },
+                    { name: '通知消息', description: '系统消息通知' },
                 ],
                 auth: true,
             },
@@ -36,6 +38,11 @@ export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
                     name: 'user',
                     path: 'user',
                     controllers: Object.values(userControllers),
+                },
+                {
+                    name: 'notice',
+                    path: 'notice',
+                    controllers: [NoticeController],
                 },
             ],
         },

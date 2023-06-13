@@ -21,7 +21,6 @@ import { UserEntity } from '@/modules/user/entities';
 import { Countries, PostType } from '../constants';
 
 import { CategoryEntity } from './category.entity';
-import { CollectEntity } from './collect.entity';
 import { CommentEntity } from './comment.entity';
 import { PostLikeEntity } from './like.entity';
 import { PostReportEntity } from './report.entity';
@@ -165,11 +164,6 @@ export class PostEntity extends BaseEntity {
     @ManyToMany(() => TagEntity)
     @JoinTable()
     tags: TagEntity[];
-
-    @Type(() => CollectEntity)
-    @ManyToMany(() => CollectEntity, (collect) => collect.posts)
-    @JoinTable()
-    collects: CollectEntity[];
 
     @OneToMany((type) => CommentEntity, (comment) => comment.post, {
         cascade: true,
