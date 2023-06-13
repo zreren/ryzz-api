@@ -162,8 +162,7 @@ export class AuthService {
         } catch (error) {
             throw new ForbiddenException();
         }
-        const { accessToken } = await this.tokenService.generateAccessToken(user, now);
-        return accessToken.value;
+        return this.tokenService.generateAccessTokenRedis(user.id, user.username, now);
     }
 
     /**

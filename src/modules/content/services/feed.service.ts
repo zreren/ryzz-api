@@ -34,6 +34,9 @@ export class FeedService {
         const postIds = feeds.map((item: any) => {
             return item.post_id;
         });
+        if (postIds.length === 0) {
+            return null;
+        }
         const posts = await this.postRepository
             .buildBaseQB()
             .where('post.id IN (:...postIds)', { postIds })

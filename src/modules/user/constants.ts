@@ -70,3 +70,8 @@ export enum RecevierActionType {
     READED = 'readed',
     DELETE = 'delete',
 }
+
+/**
+ * token所在的redis db
+ */
+export const REDIS_DB_TOKEN = 10;

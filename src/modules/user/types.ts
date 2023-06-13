@@ -87,6 +87,7 @@ export interface JwtConfig {
  */
 export interface JwtPayload {
     sub: string;
+    username: string;
     iat: number;
 }
 /**

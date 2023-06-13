@@ -3,11 +3,15 @@ import { JwtService } from '@nestjs/jwt';
 import dayjs from 'dayjs';
 import { FastifyReply as Response } from 'fastify';
 import jwt from 'jsonwebtoken';
+import { isNil } from 'lodash';
 import { MoreThanOrEqual } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 
 import { getTime } from '@/modules/core/helpers';
 
+import { RedisService } from '@/modules/core/providers/redis.service';
+
+import { REDIS_DB_TOKEN } from '../constants';
 import { AccessTokenEntity } from '../entities/access-token.entity';
 import { RefreshTokenEntity } from '../entities/refresh-token.entity';
 import { UserEntity } from '../entities/user.entity';
@@ -21,7 +25,10 @@ import { JwtConfig, JwtPayload } from '../types';
 export class TokenService {
     private readonly config: Promise<JwtConfig>;
 
-    constructor(protected readonly jwtService: JwtService) {
+    constructor(
+        protected readonly jwtService: JwtService,
+        private readonly redisService: RedisService,
+    ) {
         this.config = getUserConfig('jwt');
     }
 
@@ -54,6 +61,7 @@ export class TokenService {
     async generateAccessToken(user: UserEntity, now: dayjs.Dayjs) {
         const accessTokenPayload: JwtPayload = {
             sub: user.id,
+            username: user.username,
             iat: now.unix(),
         };
 
@@ -138,5 +146,68 @@ export class TokenService {
             return false;
         }
         return token.user;
+    }
+
+    /**
+     * 生成token && refresh token(redis)
+     * @param user
+     * @param now
+     */
+    async generateAccessTokenRedis(
+        userId: string,
+        username: string,
+        now: dayjs.Dayjs,
+    ): Promise<string> {
+        const client = this.redisService.getClient();
+        client.select(REDIS_DB_TOKEN);
+        const accessTokenPayload: JwtPayload = {
+            sub: userId,
+            username,
+            iat: now.unix(),
+        };
+
+        const refreshTokenExpireTime = (await this.config).refresh_token_expired;
+        const token = this.jwtService.sign(accessTokenPayload);
+        const refreshToken = this.jwtService.sign(accessTokenPayload, {
+            secret: (await this.config).refresh_secret,
+            expiresIn: `${refreshTokenExpireTime}s`,
+        });
+        client.hmset(token, {
+            refreshToken,
+            userId,
+            username,
+        });
+        client.expire(token, refreshTokenExpireTime);
+
+        return token;
+    }
+
+    /**
+     * 刷新token
+     * @param token
+     */
+    async refreshTokenRedis(token: string): Promise<string | null> {
+        const client = this.redisService.getClient();
+        client.select(REDIS_DB_TOKEN);
+        const data = await client.hgetall(token);
+        if (isNil(data) || isNil(data.refreshToken)) {
+            return null;
+        }
+        try {
+            if (
+                isNil(
+                    await this.jwtService.verifyAsync(data.refreshToken, {
+                        secret: (await this.config).refresh_secret,
+                    }),
+                )
+            ) {
+                return null;
+            }
+        } catch (e) {
+            return null;
+        }
+
+        client.del(token);
+        return this.generateAccessTokenRedis(data.userId, data.username, await getTime());
     }
 }

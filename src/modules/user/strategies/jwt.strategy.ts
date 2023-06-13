@@ -1,9 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { instanceToPlain } from 'class-transformer';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import { UserRepository } from '../repositories/user.repository';
+import { UserEntity } from '../entities';
 import { JwtPayload } from '../types';
 
 /**
@@ -11,10 +10,7 @@ import { JwtPayload } from '../types';
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(
-        private readonly userRepository: UserRepository,
-        @Inject('JWT_TOKEN') jwtToken: string,
-    ) {
+    constructor(@Inject('JWT_TOKEN') jwtToken: string) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
@@ -28,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      * @param payload
      */
     async validate(payload: JwtPayload) {
-        const user = await this.userRepository.findOneOrFail({ where: { id: payload.sub } });
-        return instanceToPlain(user);
+        // return { id: payload.sub, username: payload.username } as UserEntity;
+        return UserEntity.findOneBy({ id: payload.sub });
     }
 }
