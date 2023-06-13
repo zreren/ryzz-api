@@ -422,6 +422,7 @@ export type WinstonConfig<T extends NestedRecord = RecordNever> = LoggerOptions 
  * 腾讯cos配置
  */
 export interface TencentCloudCosConfig {
+    appId: number;
     secretId: string;
     secretKey: string;
     bucket: string;
