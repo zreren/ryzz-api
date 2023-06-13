@@ -3,10 +3,11 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Depends } from '@/modules/restful/decorators';
 
-import { Guest } from '@/modules/user/decorators';
+import { Guest, ReqUser } from '@/modules/user/decorators';
 
 import { ContentModule } from '../content.module';
 import { TencentCloudService } from '../services/cloud.tencent.service';
+import { UserEntity } from '@/modules/user/entities';
 
 @ApiTags('通用')
 @ApiBearerAuth()
@@ -29,7 +30,7 @@ export class CommonController {
 
     @ApiOperation({ summary: '上传凭证' })
     @Get('/uploadToken')
-    async getUploadToken() {
-        return this.tecentCloudService.getFederationToken();
+    async getUploadToken(@ReqUser() user: UserEntity) {
+        return this.tecentCloudService.getFederationToken(user);
     }
 }
