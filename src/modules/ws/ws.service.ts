@@ -4,7 +4,6 @@ import { Server } from 'socket.io';
 import { UserEntity } from '../user/entities';
 import { In } from 'typeorm';
 import { ChatMessageEntity } from './entities/message.entity';
-import { isNil } from 'lodash';
 
 @Injectable()
 export class WsService {

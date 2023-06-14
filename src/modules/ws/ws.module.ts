@@ -19,7 +19,7 @@ import { ChatMessageEntity } from './entities/message.entity';
             addEntities(configure, [ChatMessageEntity]),
         ],
         providers,
-        exports: [],
+        exports: [WsService],
     } as ModuleMetadata;
 })
 export class WsModule {}
