@@ -24,23 +24,12 @@ export enum MESSAGE_TYPE {
 
 // 聊天消息状态
 export enum MESSAGE_STATUS {
-    SEND_FAILED = 'failed',                 // 发送失败(暂时不用)
+    SEND_FAILED = 'failed',                 // 发送失败(接收方ws不在线)
     SENT = 'sent',                          // 发送成功(接收方ws在线)
     RECEIVED = 'received',                  // 接收成功(接收方客户端调用接口更新的状态)
     READ = 'read',                          // 已读
     SENDER_DELETE = 'send_delete',          // 发送者删除
     RECEIVER_DELETE = 'receiver_delete',    // 接受者删除
-}
-
-/**
- * 聊天消息体
- */
-export interface ChatMessage {
-    toUserId: string;
-    contentType: MESSAGE_TYPE;
-    content: string;
-    sendTime: number;
-    extra?: any;
 }
 
 export enum MESSAGE_EVENT {
