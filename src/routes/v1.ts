@@ -3,6 +3,7 @@ import { Configure } from '@/modules/core/configure';
 import { NoticeController } from '@/modules/notice/notice.controller';
 import { ApiVersionOption } from '@/modules/restful/types';
 import * as userControllers from '@/modules/user/controllers';
+import { WsController } from '@/modules/ws/ws.controller';
 
 export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
     routes: [
@@ -25,6 +26,7 @@ export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
                     },
                     { name: 'Auth操作', description: '用户登录,登出,注册,发送找回密码等操作' },
                     { name: '通知消息', description: '系统消息通知' },
+                    { name: '聊天', description: '聊天' }
                 ],
                 auth: true,
             },
@@ -44,6 +46,11 @@ export const v1 = async (configure: Configure): Promise<ApiVersionOption> => ({
                     path: 'notice',
                     controllers: [NoticeController],
                 },
+                {
+                    name: 'chat',
+                    path: 'chat',
+                    controllers: [WsController],
+                }
             ],
         },
         {

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import {
     ConnectedSocket,
     MessageBody,
@@ -13,13 +13,13 @@ import {
 import { Server } from 'socket.io';
 
 import { JwtService } from '@nestjs/jwt';
-import { SocketWithUserData } from './types';
+import { ChatMessage, MESSAGE_EVENT, SocketWithUserData } from './types';
 import { Observable, of } from 'rxjs';
 import { WsService } from './ws.service';
-import { JwtWsGuard } from '../user/guards';
+// import { JwtWsGuard } from '../user/guards';
 
 @Injectable()
-@UseGuards(JwtWsGuard)
+// @UseGuards(JwtWsGuard)
 @WebSocketGateway(3002, { cors: true, transports: ['polling', 'websocket'] })
 export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
     constructor(
@@ -63,9 +63,9 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     }
 
     @SubscribeMessage('chat')
-    chat(@MessageBody() data: any): Observable<WsResponse<number> | any> {
-        console.log(`send message: ${data.message}`);
-        this.wsService.pushMessageToUser(data.toUserId, 'chat', data.message);
+    chat(@ConnectedSocket() client: SocketWithUserData, @MessageBody() data: ChatMessage): Observable<WsResponse<number> | any> {
+        console.log(`${client.user.id} send message: ${data.content} to ${data.toUserId}`);
+        this.wsService.pushMessageToUser(MESSAGE_EVENT.CHAT, data, client.user.id);
         return null;
     }
 }

@@ -5,6 +5,8 @@ import { ModuleBuilder } from '../core/decorators';
 import { EventGateway } from './event.gateway';
 import { TokenService } from '../user/services';
 import { WsService } from './ws.service';
+import { addEntities } from '../database/helpers';
+import { ChatMessageEntity } from './entities/message.entity';
 
 @ModuleBuilder(async (configure) => {
     const providers = [];
@@ -13,7 +15,9 @@ import { WsService } from './ws.service';
         providers.push(EventGateway);
     }
     return {
-        imports: [],
+        imports: [
+            addEntities(configure, [ChatMessageEntity]),
+        ],
         providers,
         exports: [],
     } as ModuleMetadata;
