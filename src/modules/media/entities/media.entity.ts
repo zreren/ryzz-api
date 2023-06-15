@@ -5,9 +5,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    JoinColumn,
     ManyToOne,
-    OneToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -55,13 +53,4 @@ export class MediaEntity extends BaseEntity {
         comment: '创建时间',
     })
     createdAt!: Date;
-
-    @Expose()
-    @OneToOne((type) => UserEntity, (user) => user.avatar, {
-        nullable: true,
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-    })
-    @JoinColumn()
-    member?: UserEntity;
 }

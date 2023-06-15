@@ -28,4 +28,9 @@ export class TencentCloudService {
             secretKey: cosConfig.secretKey,
         }
     }
+
+    async getResourceDomain(bucket: string) {
+        const cosConfig = await App.configure.get<TencentCloudCosConfig>('cos');
+        return `https://${bucket}.cos.${cosConfig.region}.myqcloud.com`;
+    }
 }

@@ -25,6 +25,7 @@ import { CommentEntity } from './comment.entity';
 import { PostLikeEntity } from './like.entity';
 import { PostReportEntity } from './report.entity';
 import { TagEntity } from './tag.entity';
+import { getCosResourceUrl } from '@/modules/core/helpers';
 
 /**
  * 帖子模型
@@ -186,8 +187,7 @@ export class PostEntity extends BaseEntity {
     deletedAt: Date;
 
     @AfterLoad()
-    generateImageUrls(): void {
-        // todo 腾讯cos
-        this.imageUrls = this.imagePaths.map((path) => `http://xxx/${path}`);
+    async generateImageUrls() {
+        this.imageUrls = await Promise.all(this.imagePaths.map((key: string) => getCosResourceUrl(key)));
     }
 }

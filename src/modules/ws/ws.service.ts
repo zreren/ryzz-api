@@ -40,7 +40,7 @@ export class WsService {
     async pushMessageToUser(event: MESSAGE_EVENT, data: ChatMessageDto | any, fromUserId?: string) {
         switch (event) {
             case MESSAGE_EVENT.CHAT:
-                const users = await UserEntity.find({where: {id: In([fromUserId, data.toUserId])}, select: ['id', 'username', 'avatar']});
+                const users = await UserEntity.find({where: {id: In([fromUserId, data.toUserId])}, select: ['id', 'username', 'avatarPath']});
                 if (users.length !== 2) {
                     console.log('用户不存在');
                     break;

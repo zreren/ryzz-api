@@ -426,6 +426,8 @@ export interface TencentCloudCosConfig {
     secretId: string;
     secretKey: string;
     bucket: string;
+    publicBucket: string;
     region: string;
     durationSeconds?: number;
+    domain: string;
 }

@@ -23,6 +23,7 @@ import * as serviceMaps from './services';
 import * as strategyMaps from './strategies';
 import * as subscriberMaps from './subscribers';
 import { UserConfig } from './types';
+import { TencentCloudService } from '../content/services';
 
 const entities = Object.values(entityMaps);
 const repositories = Object.values(RepositoryMaps);
@@ -78,6 +79,7 @@ const queue = Object.values(queueMaps);
         ...guards,
         ...services,
         ...queue,
+        TencentCloudService,
     ],
     exports: [...services, ...queue, DatabaseModule.forRepository(repositories)],
 }))

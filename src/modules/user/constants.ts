@@ -75,3 +75,5 @@ export enum RecevierActionType {
  * token所在的redis db
  */
 export const REDIS_DB_TOKEN = 10;
+
+export const DEFAULT_AVATAR = '/images/default-avatar.jpg';

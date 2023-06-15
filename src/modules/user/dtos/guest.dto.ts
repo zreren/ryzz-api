@@ -73,6 +73,12 @@ export class GuestDto {
     @IsOptional({ always: true })
     nickname?: string;
 
+    /**
+     * 头像路径
+     */
+    @IsOptional({ always: true })
+    avatarPath?: string;
+
     @ApiProperty({
         description: '邮箱地址:必须符合邮箱地址规则',
         uniqueItems: true,

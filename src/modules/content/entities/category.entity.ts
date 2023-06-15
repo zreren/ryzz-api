@@ -14,6 +14,7 @@ import {
 import { BaseEntity } from '@/modules/database/base';
 
 import { PostEntity } from './post.entity';
+import { getCosResourceUrl } from '@/modules/core/helpers';
 
 /**
  * 树形嵌套分类
@@ -61,7 +62,7 @@ export class CategoryEntity extends BaseEntity {
     deletedAt: Date;
 
     @AfterLoad()
-    generateCoverUrl(): void {
-        this.coverUrl = `http://xxx/${this.coverPath}`;
+    async generateCoverUrl() {
+        this.coverUrl = await getCosResourceUrl(this.coverPath, false);
     }
 }

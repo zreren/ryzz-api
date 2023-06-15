@@ -1,6 +1,7 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 
 import {
+    AfterLoad,
     BaseEntity,
     Column,
     CreateDateColumn,
@@ -9,19 +10,17 @@ import {
     JoinTable,
     ManyToMany,
     OneToMany,
-    OneToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 
 import { AddRelations } from '@/modules/database/decorators/dynamic-relation.decorator';
 import { DynamicRelation } from '@/modules/database/types';
-import { MediaEntity } from '@/modules/media/entities';
 import { PermissionEntity, RoleEntity } from '@/modules/rbac/entities';
 import { getUserConfig } from '@/modules/user/helpers';
 
-import { AccessTokenEntity } from './access-token.entity';
 import { UserBanEntity } from './user-bans.entity';
+import { getCosResourceUrl, getDefaultAvatar } from '@/modules/core/helpers';
 
 /**
  * 用户模型
@@ -80,22 +79,6 @@ export class UserEntity extends BaseEntity {
     })
     updatedAt!: Date;
 
-    @Expose()
-    @Column({ comment: '优惠券总额', type: 'float', default: 0 })
-    earned!: number;
-
-    @Expose()
-    @Column({ comment: '优惠券余额', type: 'float', default: 0 })
-    redeemed!: number;
-
-    @Expose()
-    coupons: number[] = [];
-
-    @OneToMany(() => AccessTokenEntity, (accessToken) => accessToken.user, {
-        cascade: true,
-    })
-    accessTokens!: AccessTokenEntity[];
-
     @Expose({ groups: ['user-detail', 'user-list'] })
     @Expose()
     @Type(() => Date)
@@ -107,12 +90,11 @@ export class UserEntity extends BaseEntity {
     @Expose({ groups: ['user-detail', 'user-list'] })
     trashed!: boolean;
 
-    @Expose()
-    @OneToOne(() => MediaEntity, (media) => media.member, { nullable: true, cascade: true })
-    avatar?: MediaEntity;
+    @Column({ comment: '头像路径' })
+    avatarPath: string;
 
-    @OneToMany(() => MediaEntity, (media) => media.user)
-    medias: MediaEntity[];
+    @Expose()
+    avatarUrl: string;
 
     @Expose()
     @ManyToMany(() => RoleEntity, (role) => role.users, { cascade: true })
@@ -128,4 +110,9 @@ export class UserEntity extends BaseEntity {
     @OneToMany(() => UserBanEntity, (bans) => bans.baned_user)
     @JoinTable()
     bans: UserEntity[];
+
+    @AfterLoad()
+    async generateAvatarUrl() {
+        this.avatarUrl = this.avatarPath ? await getCosResourceUrl(this.avatarPath) : await getDefaultAvatar();
+    }
 }
