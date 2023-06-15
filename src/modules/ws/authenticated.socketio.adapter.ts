@@ -13,11 +13,10 @@ export class AuthenticatedSocketIoAdapter extends IoAdapter {
     createIOServer(port: number, options?: SocketIO.ServerOptions): any {
         options.allowRequest = async (request, allowFunction) => {
             try {
-                console.log('allowRequest valid');
                 const token = request.headers.authorization?.replace('Bearer ', '');
                 const verified = token && (await this.jwtService.verify(token));
-                console.log(verified);
                 if (verified) {
+                    console.log('allowRequest passed');
                     return allowFunction(null, true);
                 }
             } catch (error) {
@@ -25,7 +24,8 @@ export class AuthenticatedSocketIoAdapter extends IoAdapter {
                 console.log(error);
                 return allowFunction('Unauthorized', false);
             }
-            return allowFunction('Unauthorized', false);
+            console.log('allowRequest failed');
+            return allowFunction(null, false);
         };
 
         return super.createIOServer(port, options);

@@ -14,6 +14,7 @@ import { panic } from './helpers';
 import { createBootModule } from './helpers/app';
 
 import { ConfigStorageOption, CreateOptions, CreatorData } from './types';
+import { AuthenticatedSocketIoAdapter } from '../ws/authenticated.socketio.adapter';
 /**
  * 应用核心类
  * 用于构建应用和配置实例
@@ -56,6 +57,7 @@ export class App {
                 configure: this._configure,
                 BootModule,
             });
+            this._app.useWebSocketAdapter(new AuthenticatedSocketIoAdapter(this._app));
             // 根据是否传入api配置来启用open api功能
             if (!isNil(await this._configure.get<ApiConfig>('api', null))) {
                 const restful = this._app.get(Restful);

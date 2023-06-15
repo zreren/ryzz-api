@@ -33,7 +33,6 @@ import {
 } from '../types';
 
 import { CreateModule, isAsyncFn, mergeMeta } from './utils';
-import { AuthenticatedSocketIoAdapter } from '@/modules/ws/authenticated.socketio.adapter';
 
 /**
  * 创建应用的快捷函数
@@ -54,7 +53,6 @@ export async function bootApp(
 ) {
     const { app, configure } = await creator();
     const { port, host } = await configure.get<AppConfig>('app');
-    app.useWebSocketAdapter(new AuthenticatedSocketIoAdapter(app));
     await app.listen(port, host, listened({ app, configure } as any));
 }
 
