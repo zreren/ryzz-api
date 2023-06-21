@@ -90,7 +90,7 @@ export class UserEntity extends BaseEntity {
     @Expose({ groups: ['user-detail', 'user-list'] })
     trashed!: boolean;
 
-    @Column({ comment: '头像路径' })
+    @Column({ comment: '头像路径', default: '' })
     avatarPath: string;
 
     @Expose()
