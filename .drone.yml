@@ -43,5 +43,3 @@ steps:
               - echo "$${ENV_VARS}" > .env
               - rm -rf /tmp/miint-api
               - 'source ~/.zshrc; node ./cli.js dbmr && cd .. && pm2 restart ecosystem.config.js'
-              #   - $HOME/.local/share/pnpm/node ./main.js dbmr
-              #   - $HOME/.local/share/pnpm/pm2 restart miint-api

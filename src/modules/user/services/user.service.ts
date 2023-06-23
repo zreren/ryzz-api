@@ -22,6 +22,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserConfig } from '../types';
 
 import { FollowService } from './follow.service';
+import { CollectPostEntity, PostLikeEntity } from '@/modules/content/entities';
 
 interface FollowUser {
     user: UserEntity;
@@ -161,6 +162,23 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
             ...(await this.repository.remove(directs)),
             ...(await this.repository.softRemove(softs)),
         ];
+    }
+
+    async detail(id: string): Promise<UserEntity> {
+        const user = await super.detail(id);
+        user.followingCount = await this.followService.getFollowingCount(id);
+        user.followerCount = await this.followService.getFollowerCount(id);
+        user.postLikedCount = await PostLikeEntity.createQueryBuilder('like')
+            .leftJoinAndSelect('like.post', 'post')
+            .leftJoinAndSelect('post.user', 'user')
+            .where('user.id = :id', { id })
+            .getCount();
+        user.postCollectedCount = await CollectPostEntity.createQueryBuilder('collect')
+            .leftJoinAndSelect('collect.post', 'post')
+            .leftJoinAndSelect('post.user', 'user')
+            .where('user.id = :id', { id })
+            .getCount();
+        return user;
     }
 
     /**

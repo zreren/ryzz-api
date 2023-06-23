@@ -77,7 +77,8 @@ export class AccountController {
         @Param('item', new OptionalUUIDPipe()) item?: string,
     ) {
         if (isNil(item) && isNil(user)) throw new NotFoundException();
-        return this.userService.detail(item ?? user.id);
+        const userId = item ?? user.id;
+        return await this.userService.detail(userId);
     }
 
     /**

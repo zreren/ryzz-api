@@ -57,6 +57,22 @@ export class UserEntity extends BaseEntity {
     @Column({ comment: '邮箱', nullable: true, unique: true })
     email?: string;
 
+    @Expose({ groups: ['user-detail'] })
+    @Column({ comment: '个人介绍', default: '' })
+    introduction?: string;
+
+    @Expose({ groups: ['user-detail'] })
+    @Column({ comment: '性别', default: '' })
+    gender?: string;
+
+    @Expose({ groups: ['user-detail'] })
+    @Column({ comment: '生日', default: '' })
+    birthday?: string;
+
+    @Expose({ groups: ['user-detail'] })
+    @Column({ comment: '地址', default: '' })
+    address?: string;
+
     @Expose()
     @Column({ comment: '用户状态,是否激活', default: true })
     actived?: boolean;
@@ -110,6 +126,24 @@ export class UserEntity extends BaseEntity {
     @OneToMany(() => UserBanEntity, (bans) => bans.baned_user)
     @JoinTable()
     bans: UserEntity[];
+
+    @Expose({ groups: ['user-detail']})
+    followingCount?: number;
+
+    @Expose({ groups: ['user-detail']})
+    followerCount?: number;
+
+    /**
+     * 帖子被点赞次数
+     */
+    @Expose({ groups: ['user-detail']})
+    postLikedCount?: number;
+
+    /**
+     * 帖子被收藏次数
+     */
+    @Expose({ groups: ['user-detail']})
+    postCollectedCount?: number;
 
     @AfterLoad()
     async generateAvatarUrl() {
