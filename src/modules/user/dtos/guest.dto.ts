@@ -14,7 +14,7 @@ import {
 
 import { IsMatch, IsPassword } from '@/modules/core/constraints';
 import { QueryTrashMode } from '@/modules/database/constants';
-import { IsUnique, IsUniqueExist } from '@/modules/database/constraints';
+import { IsUnique } from '@/modules/database/constraints';
 
 import { CaptchaDtoGroups, UserDtoGroups } from '../constants';
 import { UserEntity } from '../entities/user.entity';
@@ -45,14 +45,7 @@ export class GuestDto {
     @IsUnique(
         { entity: UserEntity },
         {
-            groups: [UserDtoGroups.REGISTER, UserDtoGroups.CREATE],
-            message: '该用户名已被注册',
-        },
-    )
-    @IsUniqueExist(
-        { entity: UserEntity, ignore: 'id' },
-        {
-            groups: [UserDtoGroups.UPDATE, UserDtoGroups.BOUND],
+            groups: [UserDtoGroups.REGISTER, UserDtoGroups.CREATE, UserDtoGroups.UPDATE],
             message: '该用户名已被注册',
         },
     )
