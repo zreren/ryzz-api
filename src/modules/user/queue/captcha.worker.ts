@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Job, Worker } from 'bullmq';
+import { Job, QueueOptions, Worker } from 'bullmq';
 import chalk from 'chalk';
 import { omit } from 'lodash';
 import { Repository } from 'typeorm';
@@ -32,7 +32,7 @@ export class CaptchaWorker {
         return new Worker(
             SEND_CAPTCHA_QUEUE,
             async (job: Job<SendCaptchaQueueJob>) => this.sendCode(job),
-            { concurrency: 10, connection },
+            { concurrency: 10, connection, prefix: (await this.configure.get<QueueOptions>('queue'))?.prefix },
         );
     }
 

@@ -7,4 +7,5 @@ export * from './user.config';
 export * from './smtp.config';
 export * from './redis.config';
 export * from './cos.tencent.config';
+export * from './queue.config';
 // export * from './winsonLogger.config';
