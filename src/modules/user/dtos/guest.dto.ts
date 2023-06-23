@@ -138,4 +138,28 @@ export class GuestDto {
     @Length(6, 6, { message: '验证码长度错误', always: true })
     @IsDefined({ message: '验证码必须填写', always: true })
     readonly code!: string;
+
+    /**
+     * 头像路径
+     */
+    @IsOptional({ always: true })
+    introduction?: string;
+
+    /**
+     * 性别
+     */
+    @IsOptional({ always: true })
+    gender?: string;
+
+    /**
+     * 生日
+     */
+    @IsOptional({ always: true })
+    birthday?: string;
+
+    /**
+     * 地址
+     */
+    @IsOptional({ always: true })
+    address?: string;
 }
