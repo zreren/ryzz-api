@@ -78,7 +78,7 @@ export class AccountController {
     ) {
         if (isNil(item) && isNil(user)) throw new NotFoundException();
         const userId = item ?? user.id;
-        return await this.userService.detail(userId);
+        return this.userService.detail(userId);
     }
 
     /**
@@ -96,7 +96,7 @@ export class AccountController {
         @Body()
         data: UpdateAccountDto,
     ) {
-        return this.userService.updateNickname(user, data);
+        return this.userService.updateNicknameAndAvatar(user, data);
     }
 
     /**

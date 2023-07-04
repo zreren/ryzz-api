@@ -3,6 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isNil, isArray, omit } from 'lodash';
 import { EntityNotFoundError, In, SelectQueryBuilder } from 'typeorm';
 
+import { CollectPostEntity, PostLikeEntity } from '@/modules/content/entities';
 import { Configure } from '@/modules/core/configure';
 import { BaseService } from '@/modules/database/base';
 import { manualPaginateWithItems } from '@/modules/database/helpers';
@@ -22,7 +23,6 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserConfig } from '../types';
 
 import { FollowService } from './follow.service';
-import { CollectPostEntity, PostLikeEntity } from '@/modules/content/entities';
 
 interface FollowUser {
     user: UserEntity;
@@ -186,8 +186,9 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
      * @param user
      * @param param1
      */
-    async updateNickname(user: UserEntity, { nickname }: UpdateAccountDto) {
+    async updateNicknameAndAvatar(user: UserEntity, { nickname, avatarPath }: UpdateAccountDto) {
         user.nickname = nickname;
+        user.avatarPath = avatarPath;
         await this.userRepository.save(user);
         return this.detail(user.id);
     }
