@@ -18,7 +18,7 @@ export class AccountBoundDto extends PickType(GuestDto, ['code', 'email']) {}
  * 更新用户信息
  */
 @DtoValidation({ groups: [UserDtoGroups.UPDATE] })
-export class UpdateAccountDto extends PickType(GuestDto, ['username', 'nickname', 'avatarPath']) {}
+export class UpdateAccountDto extends PickType(GuestDto, ['username', 'nickname', 'avatarPath','birthday','address','gender']) {}
 
 /**
  * 更改用户密码
@@ -41,3 +41,18 @@ export class UpdatePasswordDto extends PickType(GuestDto, ['password', 'plainPas
 }
 
 export class UploadAvatarDto extends PickType(UploadFileDto, ['image']) {}
+
+
+// {
+//     "iss": "https://accounts.google.com",
+//     "azp": "1234987819200.apps.googleusercontent.com",
+//     "aud": "1234987819200.apps.googleusercontent.com",
+//     "sub": "10769150350006150715113082367",
+//     "at_hash": "HK6E_P6Dh8Y93mRNtsDB1Q",
+//     "hd": "example.com",
+//     "email": "jsmith@example.com",
+//     "email_verified": "true",
+//     "iat": 1353601026,
+//     "exp": 1353604926,
+//     "nonce": "0394852-3190485-2490358"
+//   }
