@@ -40,6 +40,7 @@ steps:
               - mkdir -p /home/pincman/htdocs/miint/api && rm -rf /home/pincman/htdocs/miint/api
               - mv /tmp/miint-api/dist /home/pincman/htdocs/miint/api
               - cd /home/pincman/htdocs/miint/api
+              - echo "$${ENV_VARS}"
               - echo "$${ENV_VARS}" > .env
               - rm -rf /tmp/miint-api
               - 'source ~/.zshrc; node ./cli.js dbmr && cd .. && pm2 restart ecosystem.config.js'
