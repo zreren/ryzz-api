@@ -174,7 +174,7 @@ export class AuthService {
     async registerByGoogle(request: Google) {
         // JwtService.
         const decoded:GoogleTokenPayload | any = await this.jwtService.decode(request.idToken);
-        if('email' in decoded){
+        if(!!decoded &&'email' in decoded){
             const {email, name} = decoded;
             const user = await this.userService.findOneByCondition({email});
             if(user){
