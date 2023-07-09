@@ -172,7 +172,6 @@ export class AuthService {
      */
     async registerByGoogle(request: Google) {
         const {data}:{data:GoogleTokenPayload} = await this.httpService.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + request.idToken).toPromise()
-          
         if(data){
             const {email, name} = data;
             const user = await this.userService.findOneByCondition({email});
@@ -187,6 +186,8 @@ export class AuthService {
                 avatarUrl : data.picture
             } as any);
             return  this.userService.findOneByCondition({ id: createUser.id });
+        }else{
+            throw new BadRequestException('google token is not valid');
         }
     }
 
