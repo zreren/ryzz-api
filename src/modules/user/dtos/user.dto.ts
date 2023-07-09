@@ -25,6 +25,7 @@ export class CreateUserDto extends PickType(GuestDto, [
     'nickname',
     'password',
     'email',
+    'avatar',
 ]) {
     @ApiPropertyOptional({
         description: '用户激活状态(无法禁用第一个超级管理员用户)',

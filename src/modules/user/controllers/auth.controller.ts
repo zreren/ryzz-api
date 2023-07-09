@@ -16,6 +16,7 @@ import {
     EmailLoginDto,
     EmailRegisterDto,
     EmailRetrievePasswordDto,
+    Google,
     RegisterDto,
     RetrievePasswordDto,
 } from '../dtos';
@@ -111,6 +112,20 @@ export class AuthController extends AuthCaptchaController {
         data: RegisterDto,
     ) {
         return this.authService.register(data);
+    }
+
+    /**
+     * 使用谷歌账号登录
+     * @param data
+     */
+    @Post('google-login')
+    @ApiOperation({ summary: '谷歌账号登录' })
+    @Guest()
+    async registerByGoogle(
+        @Body()
+        data: Google,
+    ) {
+        return this.authService.registerByGoogle(data);
     }
 
     /**

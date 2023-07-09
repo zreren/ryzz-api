@@ -27,7 +27,7 @@ import { downloadFile, generateFileName, uploadLocalFile } from '@/modules/media
 import { PermissionRepository, RoleRepository } from '@/modules/rbac/repositories';
 
 import { CaptchaActionType } from '../constants';
-import { RegisterDto } from '../dtos/auth.dto';
+import { Google, RegisterDto } from '../dtos/auth.dto';
 import { CaptchaEntity } from '../entities/captcha.entity';
 import { UserEntity } from '../entities/user.entity';
 import { decrypt, encrypt, getUserConfig } from '../helpers';
@@ -38,6 +38,8 @@ import { CaptchaTimeOption, CaptchaValidate, UserConfig } from '../types';
 import { TokenService } from './token.service';
 
 import { UserService } from './user.service';
+
+import {GoogleTokenPayload} from '../dtos/auth.dto';
 
 /**
  * 户认证服务
@@ -163,6 +165,28 @@ export class AuthService {
             throw new ForbiddenException();
         }
         return this.tokenService.generateAccessTokenRedis(user.id, user.username, now);
+    }
+
+    /**
+     * 通过idtoken进行注册
+     */
+    async registerByGoogle(request: Google) {
+        const {data}:{data:GoogleTokenPayload} = await this.httpService.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + request.idToken).toPromise()
+          
+        if(data){
+            const {email, name} = data;
+            const user = await this.userService.findOneByCondition({email});
+            if(user){
+                return { token: await this.createToken(user.id) };
+            }
+            return this.userService.create({
+                nickname: name,
+                username: name,
+                email,
+                actived: true,
+                avatarUrl : data.picture
+            } as any);
+        }
     }
 
     /**
