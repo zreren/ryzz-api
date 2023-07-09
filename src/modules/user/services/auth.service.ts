@@ -7,7 +7,7 @@ import {
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AxiosError } from 'axios';
 import { FastifyRequest as Request, FastifyRequest } from 'fastify';
@@ -53,6 +53,7 @@ export class AuthService {
         private readonly userService: UserService,
         private readonly tokenService: TokenService,
         protected readonly roleRepository: RoleRepository,
+        private readonly jwtService:JwtService,
         protected permissionRepository: PermissionRepository,
         protected httpService: HttpService,
         protected configure: Configure,
@@ -171,21 +172,24 @@ export class AuthService {
      * 通过idtoken进行注册
      */
     async registerByGoogle(request: Google) {
-        const {data}:{data:GoogleTokenPayload} = await this.httpService.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + request.idToken).toPromise()
-        if(data){
-            const {email, name} = data;
+        // JwtService.
+        const decoded:GoogleTokenPayload | any = await this.jwtService.decode(request.idToken);
+        if('email' in decoded){
+            const {email, name} = decoded;
             const user = await this.userService.findOneByCondition({email});
             if(user){
                 return { token: await this.createToken(user.id) };
             }
-            const {user:createUser} = await  this.userService.create({
-                nickname: name,
-                username: name,
-                email,
-                actived: true,
-                avatarUrl : data.picture
-            } as any);
-            return  this.userService.findOneByCondition({ id: createUser.id });
+            const createUser = new UserEntity();
+            createUser.actived = true;
+            createUser.email = email;
+            createUser.nickname = name;
+            createUser.username = name;
+            createUser.avatarUrl = decoded.picture;
+            // 储存用户
+            await createUser.save();
+            // const data = await this.userService.findOneByCondition({ id: createUser.id });
+            return { token: await this.createToken(createUser.id)};
         }else{
             throw new BadRequestException('google token is not valid');
         }
