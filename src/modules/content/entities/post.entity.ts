@@ -79,27 +79,27 @@ export class PostEntity extends BaseEntity {
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '评论数' })
+    @Column({ comment: '评论数',default:0 })
     commentCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '点赞数' })
+    @Column({ comment: '点赞数' ,default:0 })
     likeCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '转发数' })
+    @Column({ comment: '转发数',default:0  })
     repostCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '收藏数' })
+    @Column({ comment: '收藏数' ,default:0 })
     collectCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '详情页浏览数' })
+    @Column({ comment: '详情页浏览数',default:0  })
     detailCount: number;
 
     @Expose()
