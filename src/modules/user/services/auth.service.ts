@@ -179,13 +179,14 @@ export class AuthService {
             if(user){
                 return { token: await this.createToken(user.id) };
             }
-            return this.userService.create({
+            const {user:createUser} = await  this.userService.create({
                 nickname: name,
                 username: name,
                 email,
                 actived: true,
                 avatarUrl : data.picture
             } as any);
+            return  this.userService.findOneByCondition({ id: createUser.id });
         }
     }
 
