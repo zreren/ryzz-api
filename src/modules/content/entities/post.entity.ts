@@ -13,6 +13,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 
+import { getCosResourceUrl } from '@/modules/core/helpers';
 import { BaseEntity } from '@/modules/database/base';
 
 import { MediaEntity } from '@/modules/media/entities';
@@ -25,7 +26,6 @@ import { CommentEntity } from './comment.entity';
 import { PostLikeEntity } from './like.entity';
 import { PostReportEntity } from './report.entity';
 import { TagEntity } from './tag.entity';
-import { getCosResourceUrl } from '@/modules/core/helpers';
 
 /**
  * 帖子模型
@@ -79,27 +79,27 @@ export class PostEntity extends BaseEntity {
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '评论数',default:0 })
+    @Column({ comment: '评论数', default: 0 })
     commentCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '点赞数' ,default:0 })
+    @Column({ comment: '点赞数', default: 0 })
     likeCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '转发数',default:0  })
+    @Column({ comment: '转发数', default: 0 })
     repostCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '收藏数' ,default:0 })
+    @Column({ comment: '收藏数', default: 0 })
     collectCount: number;
 
     @Expose()
     @Type(() => Number)
-    @Column({ comment: '详情页浏览数',default:0  })
+    @Column({ comment: '详情页浏览数', default: 0 })
     detailCount: number;
 
     @Expose()
@@ -188,6 +188,8 @@ export class PostEntity extends BaseEntity {
 
     @AfterLoad()
     async generateImageUrls() {
-        this.imageUrls = await Promise.all(this.imagePaths.map((key: string) => getCosResourceUrl(key)));
+        this.imageUrls = await Promise.all(
+            this.imagePaths.map((key: string) => getCosResourceUrl(key)),
+        );
     }
 }
