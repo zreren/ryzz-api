@@ -62,7 +62,7 @@ export class PostEntity extends BaseEntity {
     @Index({ fulltext: true })
     body: string;
 
-    @Column({ comment: '图片列表', type: 'simple-array' })
+    @Column({ comment: '图片列表', type: 'simple-array', nullable: true })
     imagePaths?: string[];
 
     @Expose()
@@ -104,7 +104,7 @@ export class PostEntity extends BaseEntity {
 
     @Expose()
     @Type(() => String)
-    @Column({ comment: 'ip' })
+    @Column({ comment: 'ip', default: '' })
     ip: string;
 
     @Expose()
@@ -117,16 +117,16 @@ export class PostEntity extends BaseEntity {
     country: string;
 
     @Expose()
-    @Column({ comment: '位置' })
+    @Column({ comment: '位置', default: '' })
     @Type(() => String)
     location: string;
 
     @Expose()
-    @Column({ comment: '经度', type: 'decimal' })
+    @Column({ comment: '经度', type: 'decimal', default: 0 })
     longitude: number;
 
     @Expose()
-    @Column({ comment: '维度', type: 'decimal' })
+    @Column({ comment: '维度', type: 'decimal', default: 0 })
     latitude: number;
 
     @Expose()
