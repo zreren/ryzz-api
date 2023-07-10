@@ -1,7 +1,8 @@
+import { createHmac } from 'crypto';
+
 import { Module, ModuleMetadata, Type } from '@nestjs/common';
 import chalk from 'chalk';
 import dayjs from 'dayjs';
-import { createHmac } from 'crypto';
 
 import 'dayjs/locale/en';
 import 'dayjs/locale/zh-cn';
@@ -236,9 +237,13 @@ export function tBoolean(value?: string | boolean): string | boolean | undefined
 export const getDefaultAvatar = async () => {
     const cosConfig = await App.configure.get<TencentCloudCosConfig>('cos');
     return `https://${cosConfig.publicBucket}.cos.${cosConfig.region}.myqcloud.com/images/default-avatar.jpg`;
-}
+};
 
-export const getCosResourceUrl = async (key: string, isPrivate = true, expiredTime = 900): Promise<string> => {
+export const getCosResourceUrl = async (
+    key: string,
+    isPrivate = true,
+    expiredTime = 900,
+): Promise<string> => {
     const cosConfig = await App.configure.get<TencentCloudCosConfig>('cos');
     if (!isPrivate) {
         return `https://${cosConfig.publicBucket}.cos.${cosConfig.region}.myqcloud.com${key}`;
@@ -246,12 +251,16 @@ export const getCosResourceUrl = async (key: string, isPrivate = true, expiredTi
     const longBucket = cosConfig.bucket;
     const shortBucket = longBucket.substring(0, longBucket.lastIndexOf('-'));
     const appId = longBucket.substring(longBucket.lastIndexOf('-') + 1);
-    const random = Math.round(Math.random() * Math.pow(2, 32));
+    const random = Math.round(Math.random() * 2 ** 32);
     const now = Math.round(Date.now() / 1000);
     const e = now + expiredTime;
-    const path = '/' + appId + '/' + shortBucket + '/' + encodeURIComponent((key || '').replace(/(^\/*)/g, '')).replace(/%2F/g, '/');
-    const plainText = 'a=' + appId + '&b=' + shortBucket + '&k=' + cosConfig.secretId + '&t=' + now + '&e=' + e + '&r=' + random + '&f=' + path;
-    const signKey = createHmac("sha1", cosConfig.secretKey).update(plainText).digest();
-    const sign = Buffer.concat([signKey, Buffer.from(plainText)]).toString("base64");
-    return `https://${cosConfig.bucket}.cos.${cosConfig.region}.myqcloud.com${key}?sign=${encodeURIComponent(sign)}`;
-}
+    const path = `/${appId}/${shortBucket}/${encodeURIComponent(
+        (key || '').replace(/(^\/*)/g, ''),
+    ).replace(/%2F/g, '/')}`;
+    const plainText = `a=${appId}&b=${shortBucket}&k=${cosConfig.secretId}&t=${now}&e=${e}&r=${random}&f=${path}`;
+    const signKey = createHmac('sha1', cosConfig.secretKey).update(plainText).digest();
+    const sign = Buffer.concat([signKey, Buffer.from(plainText)]).toString('base64');
+    return `https://${cosConfig.bucket}.cos.${
+        cosConfig.region
+    }.myqcloud.com${key}?sign=${encodeURIComponent(sign)}`;
+};

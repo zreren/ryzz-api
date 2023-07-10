@@ -188,8 +188,8 @@ export class PostEntity extends BaseEntity {
 
     @AfterLoad()
     async generateImageUrls() {
-        this.imageUrls = await Promise.all(
-            this.imagePaths.map((key: string) => getCosResourceUrl(key)),
-        );
+        this.imageUrls = this.imagePaths
+            ? await Promise.all(this.imagePaths?.map((key: string) => getCosResourceUrl(key)))
+            : [];
     }
 }
