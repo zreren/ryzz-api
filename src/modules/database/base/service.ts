@@ -90,7 +90,7 @@ export abstract class BaseService<
      * @param trashed 查询时是否包含已软删除的数据
      * @param callback 回调查询
      */
-    async detail(id: string, callback?: QueryHook<E>): Promise<E> {
+    async detail(id: string, loginUser?: UserEntity, callback?: QueryHook<E>): Promise<E> {
         const qb = await this.buildItemQB(id, this.repository.buildBaseQB(), callback);
         const item = await qb.getOne();
         if (!item) throw new NotFoundException(`${this.repository.qbName} ${id} not exists!`);
@@ -122,7 +122,7 @@ export abstract class BaseService<
      */
     async delete(ids: string[], trash?: boolean) {
         let items: E[] = [];
-        //@ts-ignore
+        // @ts-ignore
         if (this.repository instanceof BaseTreeRepository<E>) {
             items = await this.repository.find({
                 where: { id: In(ids) as any },

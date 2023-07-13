@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { MESSAGE_EVENT, MESSAGE_STATUS, SocketWithUserData, UserSocket } from './types';
+
 import { Server } from 'socket.io';
-import { UserEntity } from '../user/entities';
+
 import { In } from 'typeorm';
+
+import { UserEntity } from '../user/entities';
+
 import { ChatMessageEntity } from './entities/message.entity';
+import { MESSAGE_EVENT, MESSAGE_STATUS, SocketWithUserData, UserSocket } from './types';
 import { ChatMessageDto } from './ws.dto';
 
 @Injectable()
@@ -40,7 +44,10 @@ export class WsService {
     async pushMessageToUser(event: MESSAGE_EVENT, data: ChatMessageDto | any, fromUserId?: string) {
         switch (event) {
             case MESSAGE_EVENT.CHAT:
-                const users = await UserEntity.find({where: {id: In([fromUserId, data.toUserId])}, select: ['id', 'username', 'avatarPath','nickname']});
+                const users = await UserEntity.find({
+                    where: { id: In([fromUserId, data.toUserId]) },
+                    select: ['id', 'username', 'avatarPath', 'nickname'],
+                });
                 if (users.length !== 2) {
                     console.log('用户不存在');
                     break;
@@ -62,7 +69,7 @@ export class WsService {
                     fromUser,
                     contentType: data.contentType,
                     content: data.content,
-                    sendTime: Date.now()
+                    sendTime: Date.now(),
                 });
                 message.status = MESSAGE_STATUS.SENT;
                 message.save();
@@ -74,53 +81,58 @@ export class WsService {
 
     /**
      * 标记消息已收到
-     * @param userId 
-     * @param maxMessageId 
+     * @param userId
+     * @param maxMessageId
      */
     async markChatMessageReceived(userId: string, maxMessageId: number): Promise<number> {
         const result = await ChatMessageEntity.createQueryBuilder()
             .where('receiverId = :userId', { userId })
-            .andWhere('status IN (:...status)', { status: [MESSAGE_STATUS.SEND_FAILED, MESSAGE_STATUS.SENT]})
+            .andWhere('status IN (:...status)', {
+                status: [MESSAGE_STATUS.SEND_FAILED, MESSAGE_STATUS.SENT],
+            })
             .andWhere('id <= :maxMessageId', { maxMessageId })
             .update({
                 status: MESSAGE_STATUS.RECEIVED,
-            }).execute();
+            })
+            .execute();
         return result.affected;
     }
 
     /**
      * 获取消息列表
-     * @param receiverId 
-     * @param senderId 
-     * @param currentMaxMessageId 
-     * @param limit 
+     * @param receiverId
+     * @param senderId
+     * @param currentMaxMessageId
+     * @param limit
      */
     async getMessages(receiverId: string, senderId?: string, currentMaxMessageId = 0, limit = 50) {
         const query = ChatMessageEntity.createQueryBuilder('message')
             .leftJoinAndSelect('message.sender', 'sender')
             .leftJoinAndSelect('message.receiver', 'receiver')
             .where('message.receiverId = :receiverId', { receiverId })
-            .andWhere('message.status NOT IN(:...status)', { status: [MESSAGE_STATUS.RECEIVER_DELETE]})
+            .andWhere('message.status NOT IN(:...status)', {
+                status: [MESSAGE_STATUS.RECEIVER_DELETE],
+            })
             .andWhere('message.id > :currentMaxMessageId', { currentMaxMessageId });
         if (senderId) {
             query.where('message.senderId = :senderId', { senderId });
         }
-        return query.take(limit)
-            .orderBy('message.id', 'ASC')
-            .getMany();
+        return query.take(limit).orderBy('message.id', 'ASC').getMany();
     }
 
     /**
      * 获取未接收消息列表
-     * @param user 
-     * @param currentMaxMessageId 
-     * @param limit 
+     * @param user
+     * @param currentMaxMessageId
+     * @param limit
      */
     async getUnreceivedMessage(user: UserEntity, currentMaxMessageId = 0, limit = 50) {
         return ChatMessageEntity.createQueryBuilder('message')
             .leftJoinAndSelect('message.sender', 'sender')
             .where('message.receiverId = :receiverId', { receiverId: user.id })
-            .andWhere('message.status IN(:...status)', { status: [MESSAGE_STATUS.SEND_FAILED, MESSAGE_STATUS.SENT]})
+            .andWhere('message.status IN(:...status)', {
+                status: [MESSAGE_STATUS.SEND_FAILED, MESSAGE_STATUS.SENT],
+            })
             .andWhere('message.id > :currentMaxMessageId', { currentMaxMessageId })
             .take(limit)
             .orderBy('message.id', 'ASC')

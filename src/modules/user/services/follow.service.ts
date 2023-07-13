@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { isNil } from 'lodash';
+
 import { RedisService } from '@/modules/core/providers/redis.service';
 
 @Injectable()
@@ -80,5 +82,11 @@ export class FollowService {
     async getFollowingCount(user_id: string): Promise<number> {
         const key = this.prefixFollowingKey() + user_id;
         return this.redisService.getClient().zcard(key);
+    }
+
+    // 是否正在关注
+    async isFollowing(user_id: string, target_user_id: string): Promise<boolean> {
+        const key = this.prefixFollowingKey() + user_id;
+        return !isNil(await this.redisService.getClient().zscore(key, target_user_id));
     }
 }

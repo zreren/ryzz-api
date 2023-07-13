@@ -2,11 +2,12 @@ import { ModuleMetadata } from '@nestjs/common';
 
 import { ModuleBuilder } from '../core/decorators';
 
-import { EventGateway } from './event.gateway';
-import { TokenService } from '../user/services';
-import { WsService } from './ws.service';
 import { addEntities } from '../database/helpers';
+import { TokenService } from '../user/services';
+
 import { ChatMessageEntity } from './entities/message.entity';
+import { EventGateway } from './event.gateway';
+import { WsService } from './ws.service';
 
 @ModuleBuilder(async (configure) => {
     const providers = [];
@@ -15,9 +16,7 @@ import { ChatMessageEntity } from './entities/message.entity';
         providers.push(EventGateway);
     }
     return {
-        imports: [
-            addEntities(configure, [ChatMessageEntity]),
-        ],
+        imports: [addEntities(configure, [ChatMessageEntity])],
         providers,
         exports: [WsService],
     } as ModuleMetadata;

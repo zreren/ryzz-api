@@ -14,13 +14,13 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 
+import { getCosResourceUrl, getDefaultAvatar } from '@/modules/core/helpers';
 import { AddRelations } from '@/modules/database/decorators/dynamic-relation.decorator';
 import { DynamicRelation } from '@/modules/database/types';
 import { PermissionEntity, RoleEntity } from '@/modules/rbac/entities';
 import { getUserConfig } from '@/modules/user/helpers';
 
 import { UserBanEntity } from './user-bans.entity';
-import { getCosResourceUrl, getDefaultAvatar } from '@/modules/core/helpers';
 
 /**
  * 用户模型
@@ -127,26 +127,34 @@ export class UserEntity extends BaseEntity {
     @JoinTable()
     bans: UserEntity[];
 
-    @Expose({ groups: ['user-detail']})
+    @Expose({ groups: ['user-detail'] })
     followingCount?: number;
 
-    @Expose({ groups: ['user-detail']})
+    @Expose({ groups: ['user-detail'] })
     followerCount?: number;
 
     /**
      * 帖子被点赞次数
      */
-    @Expose({ groups: ['user-detail']})
+    @Expose({ groups: ['user-detail'] })
     postLikedCount?: number;
 
     /**
      * 帖子被收藏次数
      */
-    @Expose({ groups: ['user-detail']})
+    @Expose({ groups: ['user-detail'] })
     postCollectedCount?: number;
+
+    /**
+     * 是否正在关注
+     */
+    @Expose({ groups: ['post-detail'] })
+    isFollowing = false;
 
     @AfterLoad()
     async generateAvatarUrl() {
-        this.avatarUrl = this.avatarPath ? await getCosResourceUrl(this.avatarPath) : await getDefaultAvatar();
+        this.avatarUrl = this.avatarPath
+            ? await getCosResourceUrl(this.avatarPath)
+            : await getDefaultAvatar();
     }
 }

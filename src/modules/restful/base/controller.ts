@@ -26,9 +26,10 @@ export abstract class BaseController<S> {
     async detail(
         @Param('id', new ParseUUIDPipe())
         id: string,
+        @ReqUser() user: UserEntity,
         ...args: any[]
     ) {
-        return (this.service as any).detail(id);
+        return (this.service as any).detail(id, user);
     }
 
     async store(@Body() data: any, @ReqUser() user: UserEntity, ...args: any[]) {

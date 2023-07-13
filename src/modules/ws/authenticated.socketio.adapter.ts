@@ -5,6 +5,7 @@ import * as SocketIO from 'socket.io';
 
 export class AuthenticatedSocketIoAdapter extends IoAdapter {
     private readonly jwtService: JwtService;
+
     constructor(private app: INestApplicationContext) {
         super(app);
         this.jwtService = this.app.get(JwtService);

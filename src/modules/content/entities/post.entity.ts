@@ -189,6 +189,12 @@ export class PostEntity extends BaseEntity {
     })
     deletedAt: Date;
 
+    @Expose()
+    isLiked = false;
+
+    @Expose({ groups: ['post-detail'] })
+    isCollected = false;
+
     @AfterLoad()
     async generateImageUrls() {
         this.imageUrls = this.imagePaths

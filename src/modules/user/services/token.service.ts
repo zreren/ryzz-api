@@ -210,4 +210,8 @@ export class TokenService {
         client.del(token);
         return this.generateAccessTokenRedis(data.userId, data.username, await getTime());
     }
+
+    checkJwToken(value: string) {
+        return this.jwtService.decode(value);
+    }
 }

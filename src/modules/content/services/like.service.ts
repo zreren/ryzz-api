@@ -121,4 +121,19 @@ export class LikeService {
             where: { id: In(postIds) },
         });
     }
+
+    /**
+     * 筛选用户点赞过的帖子ID列表
+     * @param userId
+     * @param postIds
+     */
+    async getUserLikedPostIds(userId: string, postIds: string[]): Promise<string[]> {
+        return (
+            await PostLikeEntity.createQueryBuilder(PostLikeEntity.name)
+                .where('userId = :userId', { userId })
+                .andWhere('postId IN (:...postIds)', { postIds })
+                .select(['postId'])
+                .getRawMany()
+        ).map((v) => v.postId);
+    }
 }

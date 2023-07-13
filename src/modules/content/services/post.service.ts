@@ -1,6 +1,7 @@
-import { InternalServerErrorException, Logger } from '@nestjs/common';
+import { InternalServerErrorException, SerializeOptions } from '@nestjs/common';
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { JwtService } from '@nestjs/jwt';
 import { isArray, isFunction, isNil, omit, sampleSize } from 'lodash';
 
 import { In, SelectQueryBuilder, EntityNotFoundError } from 'typeorm';
@@ -11,7 +12,7 @@ import { QueryHook } from '@/modules/database/types';
 
 import { UserBanEntity, UserEntity } from '@/modules/user/entities';
 
-import { TokenService } from '@/modules/user/services';
+import { FollowService } from '@/modules/user/services';
 
 import { Countries, PostOrderType } from '../constants';
 
@@ -25,6 +26,7 @@ import { PostRepository } from '../repositories/post.repository';
 import { SearchType } from '../types';
 
 import { CategoryService } from './category.service';
+import { LikeService } from './like.service';
 import { SearchService } from './search.service';
 
 // 文章查询接口
@@ -42,11 +44,12 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         protected repository: PostRepository,
         protected categoryRepository: CategoryRepository,
         protected categoryService: CategoryService,
-        private readonly tokenService: TokenService,
-        private readonly logger: Logger,
+        private readonly jwtService: JwtService,
+        protected readonly eventEmitter: EventEmitter2,
+        protected readonly likeService: LikeService,
+        protected readonly followService: FollowService,
         protected searchService?: SearchService,
         protected search_type: SearchType = 'against',
-        protected readonly eventEmitter?: EventEmitter2,
     ) {
         super(repository);
     }
@@ -55,19 +58,37 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      * 获取首页帖子列表
      */
     async getHomeList(requestToken: string, country: string, page = 1, limit = 10) {
+        // 普通分页数据
+        const orderBy = PostOrderType.PUBLISHED;
+
         // 登录用户
         if (!isNil(requestToken)) {
-            const token = await this.tokenService.checkAccessToken(requestToken);
-            if (!isNil(token) && !isNil(token.user)) {
-                const posts = await this.getUserHomeList(token.user.id, country, limit);
-                if (posts.length > 0) {
-                    return manualPaginateWithItems({ page, limit }, posts, 0);
+            const { sub } = this.jwtService.decode(requestToken);
+            if (!isNil(sub)) {
+                const posts = await this.getUserHomeList(sub, country, limit);
+                const data =
+                    posts.length > 0
+                        ? manualPaginateWithItems(
+                              { page, limit },
+                              posts.map((v) => Object.assign(v, { isLiked: false })),
+                              0,
+                          )
+                        : await this.paginate({ page, limit, orderBy });
+                const userLikedPostIds = await this.likeService.getUserLikedPostIds(
+                    sub,
+                    data.items.map((v: PostEntity) => v.id),
+                );
+                if (userLikedPostIds.length > 0) {
+                    data.items = data.items.map((v) => {
+                        v.isLiked = userLikedPostIds.includes(v.id);
+                        return v;
+                    });
                 }
+                return data;
             }
         }
 
-        // 普通分页数据
-        const orderBy = PostOrderType.PUBLISHED;
+        // 游客
         return this.paginate({ page, limit, orderBy });
     }
 
@@ -162,7 +183,6 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         });
         PostUserViewRecordEntity.insert(newViewedPosts);
 
-        this.logger.warn('test', 'post');
         return this.repository.find({ where: { id: In(postIds) } });
     }
 
@@ -193,12 +213,31 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      * @param id
      * @param callback 添加额外的查询
      */
-    async detail(id: string, callback?: QueryHook<PostEntity>) {
+    @SerializeOptions({
+        groups: ['post-detail'],
+    })
+    async detail(id: string, loginUser?: UserEntity, callback?: QueryHook<PostEntity>) {
         let qb = this.repository.buildBaseQB();
         qb.where(`post.id = :id`, { id });
         qb = !isNil(callback) && isFunction(callback) ? await callback(qb) : qb;
         const item = await qb.getOne();
         if (!item) throw new EntityNotFoundError(PostEntity, `The post ${id} not exists!`);
+        if (loginUser) {
+            item.user.isFollowing = await this.followService.isFollowing(
+                loginUser.id,
+                item.user.id,
+            );
+            item.isLiked =
+                (await this.likeService.getUserLikedPostIds(loginUser.id, [id])).length === 1;
+            item.isCollected = await CollectPostEntity.createQueryBuilder('collect_post')
+                .leftJoinAndSelect('collect_post.collect', 'collect')
+                .leftJoinAndSelect('collect_post.post', 'post')
+                .leftJoinAndSelect('collect.user', 'user')
+                .where('post.id = :postId', { postId: id })
+                .andWhere('user.id = :userId', { userId: loginUser.id })
+                .getExists();
+        }
+
         return item;
     }
 
@@ -258,9 +297,12 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 .of(post)
                 .addAndRemove(data.categories, post.categories ?? []);
         }
-        const updateData = omit(data, ['id', 'categories']);
+        const updateData = omit(data, ['id', 'categories', 'isDraft']);
         const publishedAt = post.is_draft && !isNil(data.isDraft) && !data.isDraft ? Date.now() : 0;
-        await this.repository.update(data.id, { ...updateData, publishedAt });
+        await this.repository.update(
+            data.id,
+            Object.assign(updateData, { publishedAt, is_draft: data.isDraft }),
+        );
         if (!isNil(this.searchService)) {
             try {
                 await this.searchService.update(post);
@@ -323,9 +365,12 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      * @param collectId
      */
     async collect(user: UserEntity, postId: string, collectId: string) {
-        const collect = await CollectEntity.findOneBy({ id: collectId });
+        const collect = await CollectEntity.findOne({
+            where: { id: collectId },
+            relations: ['user'],
+        });
         const post = await PostEntity.findOne({ where: { id: postId }, relations: ['user'] });
-        if (isNil(post) || isNil(collect) || collect.user !== user) {
+        if (isNil(post) || isNil(collect) || collect.user.id !== user.id) {
             return;
         }
         const now = new Date();

@@ -1,6 +1,6 @@
-import { Logger, ModuleMetadata } from '@nestjs/common';
+import { ModuleMetadata } from '@nestjs/common';
 
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 
 import { JwtService } from '@nestjs/jwt';
 
@@ -9,14 +9,14 @@ import { ModuleBuilder } from '../core/decorators';
 import { DatabaseModule } from '../database/database.module';
 import { addEntities, addSubscribers } from '../database/helpers';
 
-import { FollowService, TokenService } from '../user/services';
+import { FollowService } from '../user/services';
 
 import * as entities from './entities';
 import * as listeners from './listeners';
 import * as repositories from './repositories';
 import { CategoryRepository, PostRepository } from './repositories';
 import * as services from './services';
-import { CategoryService } from './services';
+import { CategoryService, LikeService } from './services';
 import { PostService } from './services/post.service';
 import { SearchService } from './services/search.service';
 import { PostSubscriber } from './subscribers';
@@ -34,33 +34,37 @@ import { SearchType } from './types';
                 PostRepository,
                 CategoryRepository,
                 CategoryService,
-                TokenService,
-                Logger,
+                JwtService,
+                EventEmitter2,
+                LikeService,
+                FollowService,
                 { token: SearchService, optional: true },
             ],
             useFactory(
                 postRepository: PostRepository,
                 categoryRepository: CategoryRepository,
                 categoryService: CategoryService,
-                tokenService: TokenService,
-                logger: Logger,
+                jwtService: JwtService,
+                eventEmitter: EventEmitter2,
+                likeService: LikeService,
+                followService: FollowService,
                 searchService?: SearchService,
             ) {
                 return new PostService(
                     postRepository,
                     categoryRepository,
                     categoryService,
-                    tokenService,
-                    logger,
+                    jwtService,
+                    eventEmitter,
+                    likeService,
+                    followService,
                     searchService,
                     searchType,
                 );
             },
         },
         FollowService,
-        TokenService,
         JwtService,
-        Logger,
     ];
     if (configure.has('elastic') && searchType === 'elastic') providers.push(SearchService);
     return {

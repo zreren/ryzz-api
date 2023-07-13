@@ -106,6 +106,7 @@ export class PostController extends BaseController<PostService> {
     @ApiOperation({ summary: '收藏' })
     async collect(@Body() data: PostCollectDto, @ReqUser() user: UserEntity) {
         console.log('collect');
+        return this.service.collect(user, data.post, data.collect);
     }
 
     @Post('cancelCollect')

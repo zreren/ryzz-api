@@ -27,7 +27,7 @@ import { downloadFile, generateFileName, uploadLocalFile } from '@/modules/media
 import { PermissionRepository, RoleRepository } from '@/modules/rbac/repositories';
 
 import { CaptchaActionType } from '../constants';
-import { Google, RegisterDto } from '../dtos/auth.dto';
+import { Google, RegisterDto, GoogleTokenPayload } from '../dtos/auth.dto';
 import { CaptchaEntity } from '../entities/captcha.entity';
 import { UserEntity } from '../entities/user.entity';
 import { decrypt, encrypt, getUserConfig } from '../helpers';
@@ -38,8 +38,6 @@ import { CaptchaTimeOption, CaptchaValidate, UserConfig } from '../types';
 import { TokenService } from './token.service';
 
 import { UserService } from './user.service';
-
-import {GoogleTokenPayload} from '../dtos/auth.dto';
 
 /**
  * 户认证服务
@@ -53,7 +51,7 @@ export class AuthService {
         private readonly userService: UserService,
         private readonly tokenService: TokenService,
         protected readonly roleRepository: RoleRepository,
-        private readonly jwtService:JwtService,
+        private readonly jwtService: JwtService,
         protected permissionRepository: PermissionRepository,
         protected httpService: HttpService,
         protected configure: Configure,
@@ -173,11 +171,11 @@ export class AuthService {
      */
     async registerByGoogle(request: Google) {
         // JwtService.
-        const decoded:GoogleTokenPayload | any = await this.jwtService.decode(request.idToken);
-        if(!!decoded &&'email' in decoded){
-            const {email, name} = decoded;
-            const user = await this.userService.findOneByCondition({email});
-            if(user){
+        const decoded: GoogleTokenPayload | any = this.jwtService.decode(request.idToken);
+        if (!!decoded && 'email' in decoded) {
+            const { email, name } = decoded;
+            const user = await this.userService.findOneByCondition({ email });
+            if (user) {
                 return { token: await this.createToken(user.id) };
             }
             const createUser = new UserEntity();
@@ -189,10 +187,9 @@ export class AuthService {
             // 储存用户
             await createUser.save();
             // const data = await this.userService.findOneByCondition({ id: createUser.id });
-            return { token: await this.createToken(createUser.id)};
-        }else{
-            throw new BadRequestException('google token is not valid');
+            return { token: await this.createToken(createUser.id) };
         }
+        throw new BadRequestException('google token is not valid');
     }
 
     /**
