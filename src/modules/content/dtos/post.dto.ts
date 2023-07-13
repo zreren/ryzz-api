@@ -64,6 +64,13 @@ export class QueryPostDto extends ListQueryDto {
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()
     isDraft?: boolean;
+
+    /**
+     * 发帖人ID
+     */
+    @IsOptional()
+    @IsUUID()
+    user?: string;
 }
 
 /**

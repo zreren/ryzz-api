@@ -378,7 +378,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         options: FindParams,
         callback?: QueryHook<PostEntity>,
     ) {
-        const { category, orderBy, search, isDraft } = options;
+        const { category, orderBy, search, isDraft, user } = options;
         const qb = await super.buildListQB(querBuilder, options, callback);
         if (!isNil(search)) {
             if (this.search_type === 'like') {
@@ -401,6 +401,10 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         }
 
         qb.andWhere('is_draft = :is_draft', { is_draft: !isNil(isDraft) && isDraft });
+
+        if (!isNil(user)) {
+            qb.andWhere('user.id = user', { user });
+        }
 
         this.addOrderByQuery(qb, orderBy);
         if (category) await this.queryByCategory(category, qb);
