@@ -1,8 +1,18 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsDefined, IsEnum, IsNotEmpty, IsOptional, IsUUID, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+    IsBoolean,
+    IsDefined,
+    IsEnum,
+    IsNotEmpty,
+    IsOptional,
+    IsUUID,
+    MaxLength,
+} from 'class-validator';
 
 import { DtoValidation } from '@/modules/core/decorators';
 
+import { toBoolean } from '@/modules/core/helpers';
 import { IsDataExist } from '@/modules/database/constraints';
 
 import { ListQueryDto } from '@/modules/restful/dtos';
@@ -45,6 +55,15 @@ export class QueryPostDto extends ListQueryDto {
     })
     @IsOptional()
     orderBy?: PostOrderType;
+
+    /**
+     * 是否是草稿
+     * @example true
+     */
+    @IsOptional()
+    @Transform(({ value }) => toBoolean(value))
+    @IsBoolean()
+    isDraft?: boolean;
 }
 
 /**
@@ -89,6 +108,15 @@ export class CreatePostDto {
     })
     @IsOptional({ always: true })
     categories?: string[];
+
+    /**
+     * 是否是草稿
+     * @example true
+     */
+    @IsOptional()
+    @Transform(({ value }) => toBoolean(value))
+    @IsBoolean()
+    isDraft?: boolean;
 }
 
 /**

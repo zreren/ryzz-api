@@ -3,7 +3,7 @@ export class PostPublishedEvent {
 
     user_id: string;
 
-    publish_time: string;
+    publish_time: number;
 
     public constructor(init?: Partial<PostPublishedEvent>) {
         Object.assign(this, init);

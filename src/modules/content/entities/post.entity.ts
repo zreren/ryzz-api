@@ -152,6 +152,9 @@ export class PostEntity extends BaseEntity {
     })
     updatedAt: Date;
 
+    @Column({ comment: '是否草稿', default: false })
+    is_draft: boolean;
+
     @Expose()
     @Type(() => CategoryEntity)
     @ManyToMany(() => CategoryEntity, (category) => category.posts, {

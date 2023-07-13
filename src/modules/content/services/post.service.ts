@@ -18,7 +18,7 @@ import { Countries, PostOrderType } from '../constants';
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos/post.dto';
 import { CollectEntity, CollectPostEntity, PostUserViewRecordEntity } from '../entities';
 import { PostEntity } from '../entities/post.entity';
-import { PostCollectEvent } from '../events';
+import { PostCollectEvent, PostPublishedEvent } from '../events';
 import { CategoryRepository } from '../repositories/category.repository';
 import { PostRepository } from '../repositories/post.repository';
 
@@ -216,6 +216,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                   })
                 : [],
             user,
+            publishedAt: isNil(data.isDraft) || !data.isDraft ? Date.now() : 0,
         };
         const item = await this.repository.save(createPostDto);
         if (!isNil(this.searchService)) {
@@ -224,6 +225,17 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
             } catch (err) {
                 throw new InternalServerErrorException(err);
             }
+        }
+
+        if (!item.is_draft) {
+            this.eventEmitter.emit(
+                'post.published',
+                new PostPublishedEvent({
+                    post_id: item.id,
+                    user_id: user.id,
+                    publish_time: item.publishedAt,
+                }),
+            );
         }
 
         return this.detail(item.id);
@@ -235,6 +247,9 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      */
     async update(data: UpdatePostDto) {
         const post = await this.detail(data.id);
+        if (!post.is_draft && !isNil(data.isDraft) && data.isDraft) {
+            throw new InternalServerErrorException('published post cannot change to draft!');
+        }
         if (isArray(data.categories)) {
             // 更新文章所属分类
             await this.repository
@@ -243,7 +258,9 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 .of(post)
                 .addAndRemove(data.categories, post.categories ?? []);
         }
-        await this.repository.update(data.id, omit(data, ['id', 'categories']));
+        const updateData = omit(data, ['id', 'categories']);
+        const publishedAt = post.is_draft && !isNil(data.isDraft) && !data.isDraft ? Date.now() : 0;
+        await this.repository.update(data.id, { ...updateData, publishedAt });
         if (!isNil(this.searchService)) {
             try {
                 await this.searchService.update(post);
@@ -251,6 +268,18 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 throw new InternalServerErrorException(err);
             }
         }
+
+        if (publishedAt > 0) {
+            this.eventEmitter.emit(
+                'post.published',
+                new PostPublishedEvent({
+                    post_id: post.id,
+                    user_id: post.user.id,
+                    publish_time: publishedAt,
+                }),
+            );
+        }
+
         return this.detail(data.id);
     }
 
@@ -349,7 +378,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         options: FindParams,
         callback?: QueryHook<PostEntity>,
     ) {
-        const { category, orderBy, search } = options;
+        const { category, orderBy, search, isDraft } = options;
         const qb = await super.buildListQB(querBuilder, options, callback);
         if (!isNil(search)) {
             if (this.search_type === 'like') {
@@ -370,6 +399,9 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                     });
             }
         }
+
+        qb.andWhere('is_draft = :is_draft', { is_draft: !isNil(isDraft) && isDraft });
+
         this.addOrderByQuery(qb, orderBy);
         if (category) await this.queryByCategory(category, qb);
         return qb;

@@ -11,7 +11,7 @@ import { FeedService } from '../services';
 export class FeedListener {
     constructor(private readonly feedService: FeedService) {}
 
-    @OnEvent('post.created')
+    @OnEvent('post.published')
     handlePostPublishedEvent(payload: PostPublishedEvent) {
         // todo 异步
         console.log(`post ${payload.post_id} created`);

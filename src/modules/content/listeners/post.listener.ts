@@ -12,7 +12,7 @@ import { PostPublishedEvent } from '../events/postPublished.event';
 
 @Injectable()
 export class PostListener {
-    @OnEvent('post.created')
+    @OnEvent('post.published')
     handlePostPublishedEvent(payload: PostPublishedEvent) {
         console.log(`post ${payload.post_id} created`);
     }

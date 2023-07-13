@@ -1,4 +1,11 @@
-import { Injectable, UnauthorizedException, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+    Injectable,
+    UnauthorizedException,
+    UseFilters,
+    UsePipes,
+    ValidationPipe,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
     ConnectedSocket,
     MessageBody,
@@ -10,14 +17,13 @@ import {
     WsResponse,
 } from '@nestjs/websockets';
 
+import { Observable, of } from 'rxjs';
 import { Server } from 'socket.io';
 
-import { JwtService } from '@nestjs/jwt';
-import { MESSAGE_EVENT, SocketWithUserData } from './types';
-import { Observable, of } from 'rxjs';
-import { WsService } from './ws.service';
-import { ChatMessageDto } from './ws.dto';
 import { BadRequestTransformationFilter } from './BadRequestTransformation.filter';
+import { MESSAGE_EVENT, SocketWithUserData } from './types';
+import { ChatMessageDto } from './ws.dto';
+import { WsService } from './ws.service';
 // import { JwtWsGuard } from '../user/guards';
 
 @Injectable()
@@ -26,10 +32,7 @@ import { BadRequestTransformationFilter } from './BadRequestTransformation.filte
 // @UseGuards(JwtWsGuard)
 @WebSocketGateway(3002, { cors: true, transports: ['polling', 'websocket'] })
 export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
-    constructor(
-        private readonly jwtService: JwtService,
-        private readonly wsService: WsService,
-    ) {}
+    constructor(private readonly jwtService: JwtService, private readonly wsService: WsService) {}
 
     async afterInit(ws: Server) {
         this.wsService.setServer(ws);
@@ -38,7 +41,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     async handleConnection(client: SocketWithUserData) {
         try {
             const token = client.handshake.headers.authorization.replace('Bearer ', '');
-            const { sub } = await this.jwtService.decode(token);
+            const { sub } = this.jwtService.decode(token);
             client.user = {
                 id: sub,
                 lastActiveTime: client.handshake.issued,
@@ -51,7 +54,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect, O
         }
 
         // todo ws用户登录事件
-        console.log('connect ' + client.user.id);
+        console.log(`connect ${client.user.id}`);
     }
 
     async handleDisconnect(client: SocketWithUserData) {
@@ -67,7 +70,10 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     }
 
     @SubscribeMessage('chat')
-    chat(@ConnectedSocket() client: SocketWithUserData, @MessageBody() data: ChatMessageDto): Observable<WsResponse<number> | any> {
+    chat(
+        @ConnectedSocket() client: SocketWithUserData,
+        @MessageBody() data: ChatMessageDto,
+    ): Observable<WsResponse<number> | any> {
         console.log(`${client.user.id} send message: ${data.content} to ${data.toUserId}`);
         this.wsService.pushMessageToUser(MESSAGE_EVENT.CHAT, data, client.user.id);
         return null;
