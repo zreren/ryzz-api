@@ -151,6 +151,12 @@ export class UserEntity extends BaseEntity {
     @Expose({ groups: ['post-detail'] })
     isFollowing = false;
 
+    /**
+     * 帖子个数
+     */
+    @Expose({ groups: ['user-detail'] })
+    postCount?: number;
+
     @AfterLoad()
     async generateAvatarUrl() {
         this.avatarUrl = this.avatarPath

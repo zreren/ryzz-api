@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isNil, isArray, omit } from 'lodash';
 import { EntityNotFoundError, In, SelectQueryBuilder } from 'typeorm';
 
-import { CollectPostEntity, PostLikeEntity } from '@/modules/content/entities';
+import { CollectPostEntity, PostEntity, PostLikeEntity } from '@/modules/content/entities';
 import { Configure } from '@/modules/core/configure';
 import { BaseService } from '@/modules/database/base';
 import { manualPaginateWithItems } from '@/modules/database/helpers';
@@ -177,6 +177,10 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
             .leftJoinAndSelect('collect.post', 'post')
             .leftJoinAndSelect('post.user', 'user')
             .where('user.id = :id', { id })
+            .getCount();
+        user.postCount = await PostEntity.createQueryBuilder()
+            .where('userId = :id', { id })
+            .andWhere('is_draft = :is_draft', { is_draft: false })
             .getCount();
         return user;
     }
