@@ -255,7 +255,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                   })
                 : [],
             user,
-            publishedAt: isNil(data.isDraft) || !data.isDraft ? Date.now() : 0,
+            publishedAt: isNil(data.isDraft) || !data.isDraft ? Date.now() / 1000 : 0,
         };
         const item = await this.repository.save(createPostDto);
         if (!isNil(this.searchService)) {
@@ -298,7 +298,8 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 .addAndRemove(data.categories, post.categories ?? []);
         }
         const updateData = omit(data, ['id', 'categories', 'isDraft']);
-        const publishedAt = post.is_draft && !isNil(data.isDraft) && !data.isDraft ? Date.now() : 0;
+        const publishedAt =
+            post.is_draft && !isNil(data.isDraft) && !data.isDraft ? Date.now() / 1000 : 0;
         await this.repository.update(
             data.id,
             Object.assign(updateData, { publishedAt, is_draft: data.isDraft }),
