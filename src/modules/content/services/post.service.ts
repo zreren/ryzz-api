@@ -17,7 +17,12 @@ import { FollowService } from '@/modules/user/services';
 import { Countries, PostOrderType } from '../constants';
 
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos/post.dto';
-import { CollectEntity, CollectPostEntity, PostUserViewRecordEntity } from '../entities';
+import {
+    CollectEntity,
+    CollectPostEntity,
+    PostLikeEntity,
+    PostUserViewRecordEntity,
+} from '../entities';
 import { PostEntity } from '../entities/post.entity';
 import { PostCollectEvent, PostPublishedEvent } from '../events';
 import { CategoryRepository } from '../repositories/category.repository';
@@ -74,16 +79,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                               0,
                           )
                         : await this.paginate({ page, limit, orderBy });
-                const userLikedPostIds = await this.likeService.getUserLikedPostIds(
-                    sub,
-                    data.items.map((v: PostEntity) => v.id),
-                );
-                if (userLikedPostIds.length > 0) {
-                    data.items = data.items.map((v) => {
-                        v.isLiked = userLikedPostIds.includes(v.id);
-                        return v;
-                    });
-                }
+                data.items = await this.renderPostInfo<PostEntity>(sub, data.items);
                 return data;
             }
         }
@@ -206,6 +202,23 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         }
         const qb = await this.buildListQB(this.repository.buildBaseQB(), options, callback);
         return paginate(qb, options);
+    }
+
+    async getLikePosts(userId: string, page = 1, limit = 10) {
+        const data = await PostLikeEntity.createQueryBuilder('post_like')
+            .leftJoinAndSelect('post_like.post', 'post')
+            .leftJoinAndSelect('post.user', 'user')
+            .where('post_like.userId = :userId', { userId })
+            .orderBy('post_like.createdAt', 'DESC')
+            .skip((page - 1) * limit)
+            .take(limit)
+            .getManyAndCount();
+        data[0] = data[0].map((v) => {
+            v.post.isLiked = true;
+            return v;
+        });
+
+        return manualPaginateWithItems({ page, limit }, data[0], data[1]);
     }
 
     /**
@@ -489,6 +502,22 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         const ids = [tree.id, ...flatDes.map((item) => item.id)];
         return qb.where('categories.id IN (:...ids)', {
             ids,
+        });
+    }
+
+    /**
+     * 渲染post信息
+     * @param userId
+     * @param posts
+     */
+    protected async renderPostInfo<T>(userId: string, posts: PostEntity[]): Promise<T[]> {
+        const userLikedPostIds = await this.likeService.getUserLikedPostIds(
+            userId,
+            posts.map((v: PostEntity) => v.id),
+        );
+        return posts.map((v) => {
+            v.isLiked = userLikedPostIds.includes(v.id);
+            return v as T;
         });
     }
 }

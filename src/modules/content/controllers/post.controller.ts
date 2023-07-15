@@ -88,6 +88,12 @@ export class PostController extends BaseController<PostService> {
         return this.feedService.getTimelineFeeds(user.id, options.page, options.limit);
     }
 
+    @Get('likes')
+    @ApiOperation({ summary: '点赞帖子列表' })
+    async likes(@Query() options: ListQueryDto, @ReqUser() user: ClassToPlain<UserEntity>) {
+        return this.service.getLikePosts(user.id, options.page, options.limit);
+    }
+
     @Post('like')
     @ApiOperation({ summary: '点赞' })
     async like(@Body() data: LikeDto, @ReqUser() user: UserEntity) {

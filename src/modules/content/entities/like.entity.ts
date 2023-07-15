@@ -1,4 +1,4 @@
-import { Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import {
     BaseEntity,
     CreateDateColumn,
@@ -14,6 +14,7 @@ import { CommentEntity } from './comment.entity';
 import { PostEntity } from './post.entity';
 
 class LikeEntity extends BaseEntity {
+    @Exclude()
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -28,7 +29,7 @@ class LikeEntity extends BaseEntity {
 @Entity('content_posts_likes')
 @Index('uniq_user_post', ['user', 'post'], { unique: true })
 export class PostLikeEntity extends LikeEntity {
-    @Expose()
+    @Exclude()
     @ManyToOne((type) => UserEntity, (user) => user.post_likes)
     user: UserEntity;
 
