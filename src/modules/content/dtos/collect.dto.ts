@@ -4,6 +4,8 @@ import { IsDefined, IsNotEmpty, IsOptional, IsUUID, MaxLength } from 'class-vali
 import { DtoValidation } from '@/modules/core/decorators';
 import { IsDataExist } from '@/modules/database/constraints';
 
+import { ListQueryDto } from '@/modules/restful/dtos';
+
 import { PostEntity } from '../entities';
 
 /**
@@ -55,3 +57,20 @@ export class PostCollectDto {
 
 @DtoValidation({ groups: ['create'] })
 export class CancelPostCollectDto extends PostCollectDto {}
+
+export class QueryCollectPostDto extends ListQueryDto {
+    @ApiProperty({
+        description: '收藏夹id',
+    })
+    @IsUUID(undefined, { always: true, message: '收藏夹ID不合法' })
+    @IsOptional()
+    collect?: string;
+}
+
+export class QueryCollectDto extends ListQueryDto {
+    @ApiProperty({
+        description: '用户ID',
+    })
+    @IsUUID(undefined, { always: true, message: '用户ID不合法' })
+    user: string;
+}
