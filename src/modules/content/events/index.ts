@@ -4,3 +4,5 @@ export * from './cancelPostCollect.event';
 export * from './cancelPostLike.event';
 export * from './postCollect.event';
 export * from './postLike.event';
+export * from './commentLike.event';
+export * from './cancelCommentLike.event';

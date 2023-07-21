@@ -45,6 +45,11 @@ export class CommentEntity extends BaseEntity {
     body: string;
 
     @Expose()
+    @Type(() => Number)
+    @Column({ comment: '点赞数', default: 0 })
+    likeCount: number;
+
+    @Expose()
     @Type(() => Date)
     @CreateDateColumn({
         comment: '创建时间',
@@ -70,4 +75,7 @@ export class CommentEntity extends BaseEntity {
     @Expose()
     @TreeChildren({ cascade: true })
     children: CommentEntity[];
+
+    @Expose()
+    isLiked = false;
 }

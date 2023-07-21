@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-useless-constructor */
-import { isNil, pick, unset } from 'lodash';
+import { isNil, omit, pick, unset } from 'lodash';
 import {
     EntityManager,
     EntityTarget,
@@ -269,5 +269,23 @@ export class BaseTreeRepository<E extends ObjectLiteral> extends TreeRepository<
             data.push(...(await this.toFlatTrees(children, depth + 1, item)));
         }
         return data as E[];
+    }
+
+    /**
+     * 扁平树恢复树形
+     * @param trees
+     * @param parent
+     */
+    toTrees(trees: E[], parent: E | null = null): E[] {
+        const data: E[] = [];
+        for (const item of trees) {
+            if (item.parent === parent || item.parent?.id === parent) {
+                data.push({
+                    ...omit(item, 'parent', 'depth'),
+                    children: this.toTrees(trees, item.id),
+                } as unknown as E);
+            }
+        }
+        return data;
     }
 }

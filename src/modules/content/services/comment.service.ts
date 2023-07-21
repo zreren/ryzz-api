@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { JwtService } from '@nestjs/jwt';
 import { isNil } from 'lodash';
 
 import { EntityNotFoundError, SelectQueryBuilder } from 'typeorm';
@@ -15,6 +16,8 @@ import { CommentPublishedEvent } from '../events/commentPublished.event';
 import { CommentRepository } from '../repositories/comment.repository';
 import { PostRepository } from '../repositories/post.repository';
 
+import { LikeService } from './like.service';
+
 /**
  * 评论数据操作
  */
@@ -24,6 +27,8 @@ export class CommentService extends BaseService<CommentEntity, CommentRepository
         protected repository: CommentRepository,
         protected postRepository: PostRepository,
         private readonly eventEmitter: EventEmitter2,
+        private readonly jwtService: JwtService,
+        private readonly likeService: LikeService,
     ) {
         super(repository);
     }
@@ -32,12 +37,34 @@ export class CommentService extends BaseService<CommentEntity, CommentRepository
      * 直接查询评论树
      * @param options
      */
-    async findTrees(options: QueryCommentTreeDto = {}) {
-        return this.repository.findTrees({
+    async findTrees(options: QueryCommentTreeDto = {}, requestToken = '') {
+        const comments = await this.repository.findTrees({
             addQuery: async (qb) => {
                 return isNil(options.post) ? qb : qb.where('post.id = :id', { id: options.post });
             },
         });
+
+        // 登录用户
+        if (comments.length > 0 && !isNil(requestToken)) {
+            const { sub } = this.jwtService.decode(requestToken);
+            if (!isNil(sub)) {
+                const flatTrees = await this.repository.toFlatTrees(comments);
+                const commentIds = flatTrees.map((v: CommentEntity) => v.id);
+                const likedCommentIds = await this.likeService.getUserLikedCommentIds(
+                    sub,
+                    commentIds,
+                );
+                if (likedCommentIds.length > 0) {
+                    return this.repository.toTrees(
+                        flatTrees.map((v: CommentEntity) => {
+                            v.isLiked = likedCommentIds.includes(v.id);
+                            return v;
+                        }),
+                    );
+                }
+            }
+        }
+        return comments;
     }
 
     /**

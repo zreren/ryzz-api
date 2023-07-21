@@ -9,8 +9,13 @@ import { UserEntity } from '@/modules/user/entities';
 
 import { UserRepository } from '@/modules/user/repositories';
 
-import { PostEntity, PostLikeEntity } from '../entities';
-import { PostLikeEvent } from '../events';
+import { CommentEntity, CommentLikeEntity, PostEntity, PostLikeEntity } from '../entities';
+import {
+    CancelCommentLikeEvent,
+    CancelPostLikeEvent,
+    CommentLikeEvent,
+    PostLikeEvent,
+} from '../events';
 import { PostRepository } from '../repositories';
 
 /**
@@ -65,10 +70,19 @@ export class LikeService {
      * @param postId 帖子ID
      */
     async cancelLike(userId: string, postId: string) {
-        PostLikeEntity.createQueryBuilder(PostLikeEntity.name)
+        const result = await PostLikeEntity.createQueryBuilder(PostLikeEntity.name)
             .where('userId = :userId AND postId = :postId', { userId, postId })
             .delete()
             .execute();
+        if (result.affected === 1) {
+            this.eventEmitter.emit(
+                'post.cancelLike',
+                new CancelPostLikeEvent({
+                    post_id: postId,
+                    user_id: userId,
+                }),
+            );
+        }
     }
 
     /**
@@ -135,5 +149,80 @@ export class LikeService {
                 .select(['postId'])
                 .getRawMany()
         ).map((v) => v.postId);
+    }
+
+    /**
+     * 点赞评论
+     * @param user 用户
+     * @param post_id 帖子ID
+     */
+    async likeComment(user: UserEntity, commentId: string) {
+        const comment = await CommentEntity.findOne({
+            where: { id: commentId },
+            relations: ['user'],
+        });
+        if (isNil(comment)) {
+            return;
+        }
+        const now = new Date();
+        const result = await CommentLikeEntity.createQueryBuilder(CommentLikeEntity.name)
+            .insert()
+            .orIgnore()
+            .updateEntity(false)
+            .values({
+                user,
+                comment,
+                createdAt: now,
+            })
+            .execute();
+
+        if (result.raw.affectedRows === 1) {
+            this.eventEmitter.emit(
+                'comment.like',
+                new CommentLikeEvent({
+                    comment_id: comment.id,
+                    user_id: user.id,
+                    target_user_id: comment.user.id,
+                    created_at: now,
+                }),
+            );
+        }
+    }
+
+    /**
+     * 取消点赞评论
+     * @param userId 用户ID
+     * @param postId 帖子ID
+     */
+    async cancelLikeComment(userId: string, commentId: string) {
+        const result = await CommentLikeEntity.createQueryBuilder(CommentLikeEntity.name)
+            .where('userId = :userId AND commentId = :commentId', { userId, commentId })
+            .delete()
+            .execute();
+
+        if (result.affected === 1) {
+            this.eventEmitter.emit(
+                'comment.cancelLike',
+                new CancelCommentLikeEvent({
+                    comment_id: commentId,
+                    user_id: userId,
+                }),
+            );
+        }
+    }
+
+    /**
+     * 筛选用户点赞过的评论ID列表
+     * @param userId
+     * @param commentIds
+     */
+    async getUserLikedCommentIds(userId: string, commentIds: string[]): Promise<string[]> {
+        return (
+            await CommentLikeEntity.createQueryBuilder(CommentLikeEntity.name)
+                .where('userId = :userId', { userId })
+                .andWhere('commentId IN (:...commentIds)', { commentIds })
+                .select(['commentId'])
+                .getRawMany()
+        ).map((v) => v.commentId);
     }
 }
