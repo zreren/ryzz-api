@@ -110,7 +110,6 @@ export class CommentService extends BaseService<CommentEntity, CommentRepository
                 target_user_id: post.user.id,
             }),
         );
-
         return this.repository.findOneOrFail({ where: { id: item.id } });
     }
 
