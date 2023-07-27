@@ -53,7 +53,7 @@ steps:
               from_secret: ssh_key
           port: 22
           command_timeout: 2m
-          target: /tmp/tradovel-api
+          target: /tmp/miint-api
           source:
               - ./dist
     - name: deploy-prod
@@ -70,10 +70,10 @@ steps:
           command_timeout: 2m
           envs: [ENV_VARS]
           script:
-              - mkdir -p /home/pincman/htdocs/tradovel/api && rm -rf /home/pincman/htdocs/tradovel/api
-              - mv /tmp/tradovel-api/dist /home/pincman/htdocs/tradovel/api
-              - cd /home/pincman/htdocs/tradovel/api
+              - mkdir -p /home/pincman/htdocs/miint/api && rm -rf /home/pincman/htdocs/miint/api
+              - mv /tmp/miint-api/dist /home/pincman/htdocs/miint/api
+              - cd /home/pincman/htdocs/miint/api
               - echo "$${ENV_VARS}"
               - echo "$${ENV_VARS}" > .env
-              - rm -rf /tmp/tradovel-api
+              - rm -rf /tmp/miint-api
               - 'source ~/.zshrc; node ./cli.js dbmr && cd .. && pm2 restart ecosystem.config.js'
