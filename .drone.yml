@@ -47,7 +47,7 @@ steps:
     - name: upload-prod
       image: appleboy/drone-scp
       settings:
-          host: 45.125.34.94
+          host: 43.131.63.37
           username: pincman
           key:
               from_secret: ssh_key
@@ -62,7 +62,7 @@ steps:
           ENV_VARS:
               from_secret: env_vars
       settings:
-          host: 45.125.34.94
+          host: 43.131.63.37
           username: pincman
           key:
               from_secret: ssh_key
