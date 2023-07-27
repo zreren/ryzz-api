@@ -44,3 +44,36 @@ steps:
               - echo "$${ENV_VARS}" > .env
               - rm -rf /tmp/miint-api
               - 'source ~/.zshrc; node ./cli.js dbmr && cd .. && pm2 restart ecosystem.config.js'
+    - name: upload-prod
+      image: appleboy/drone-scp
+      settings:
+          host: 45.125.34.94
+          username: pincman
+          key:
+              from_secret: ssh_key
+          port: 22
+          command_timeout: 2m
+          target: /tmp/tradovel-api
+          source:
+              - ./dist
+    - name: deploy-prod
+      image: appleboy/drone-ssh
+      environment:
+          ENV_VARS:
+              from_secret: env_vars
+      settings:
+          host: 45.125.34.94
+          username: pincman
+          key:
+              from_secret: ssh_key
+          port: 22
+          command_timeout: 2m
+          envs: [ENV_VARS]
+          script:
+              - mkdir -p /home/pincman/htdocs/tradovel/api && rm -rf /home/pincman/htdocs/tradovel/api
+              - mv /tmp/tradovel-api/dist /home/pincman/htdocs/tradovel/api
+              - cd /home/pincman/htdocs/tradovel/api
+              - echo "$${ENV_VARS}"
+              - echo "$${ENV_VARS}" > .env
+              - rm -rf /tmp/tradovel-api
+              - 'source ~/.zshrc; node ./cli.js dbmr && cd .. && pm2 restart ecosystem.config.js'
