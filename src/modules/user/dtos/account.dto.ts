@@ -18,7 +18,7 @@ export class AccountBoundDto extends PickType(GuestDto, ['code', 'email']) {}
  * 更新用户信息
  */
 @DtoValidation({ groups: [UserDtoGroups.UPDATE] })
-export class UpdateAccountDto extends PickType(GuestDto, ['username', 'nickname', 'avatarPath','birthday','address','gender']) {}
+export class UpdateAccountDto extends PickType(GuestDto, ['username','introduction', 'nickname', 'avatarPath','birthday','address','gender']) {}
 
 /**
  * 更改用户密码

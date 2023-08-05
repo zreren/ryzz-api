@@ -186,13 +186,17 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
     }
 
     /**
-     * 更新昵称
+     * 更新用户资料
      * @param user
      * @param param1
      */
-    async updateNicknameAndAvatar(user: UserEntity, { nickname, avatarPath }: UpdateAccountDto) {
+    async updateNicknameAndAvatar(user: UserEntity, { nickname, avatarPath,introduction,address,gender,birthday }: UpdateAccountDto) {
         user.nickname = nickname;
         user.avatarPath = avatarPath;
+        user.introduction = introduction;
+        user.address = address;
+        user.gender = gender;
+        user.birthday = birthday;
         await this.userRepository.save(user);
         return this.detail(user.id);
     }
