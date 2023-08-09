@@ -44,7 +44,7 @@ import {
 import { UserEntity } from '../entities';
 import { getUserConfig } from '../helpers';
 import { CaptchaJob } from '../queue';
-import { AuthService, UserService } from '../services';
+import { AuthService, FollowService, UserService } from '../services';
 import { UserModule } from '../user.module';
 
 /**
@@ -61,6 +61,7 @@ export class AccountController {
         protected readonly captchaJob: CaptchaJob,
         protected configure: Configure,
         protected mediaService: MediaService,
+        protected followService: FollowService,
     ) {}
 
     /**
@@ -78,7 +79,11 @@ export class AccountController {
     ) {
         if (isNil(item) && isNil(user)) throw new NotFoundException();
         const userId = item ?? user.id;
-        return this.userService.detail(userId);
+        const data = await this.userService.detail(userId);
+        if (!isNil(item) && item !== user.id) {
+            data.isFollowing = await this.followService.isFollowing(user.id, item);
+        }
+        return data;
     }
 
     /**

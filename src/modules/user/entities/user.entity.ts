@@ -148,7 +148,7 @@ export class UserEntity extends BaseEntity {
     /**
      * 是否正在关注
      */
-    @Expose({ groups: ['post-detail'] })
+    @Expose({ groups: ['post-detail', 'user-detail'] })
     isFollowing = false;
 
     /**
