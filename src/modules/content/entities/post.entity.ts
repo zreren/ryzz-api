@@ -24,7 +24,6 @@ import { Countries, PostType } from '../constants';
 import { CategoryEntity } from './category.entity';
 import { CommentEntity } from './comment.entity';
 import { PostLikeEntity } from './like.entity';
-import { PostReportEntity } from './report.entity';
 import { TagEntity } from './tag.entity';
 
 /**
@@ -36,6 +35,8 @@ import { TagEntity } from './tag.entity';
 @Index('idx_likeCount_country', ['likeCount', 'country'])
 @Index('idx_commentCount_country', ['commentCount', 'country'])
 export class PostEntity extends BaseEntity {
+    [key: string]: any;
+
     @Expose()
     @ManyToOne(() => UserEntity, (user) => user.posts)
     @Index('idx_uid')
@@ -173,11 +174,6 @@ export class PostEntity extends BaseEntity {
         cascade: true,
     })
     comments: CommentEntity[];
-
-    @OneToMany((type) => PostReportEntity, (report) => report.post, {
-        cascade: true,
-    })
-    reports: PostReportEntity[];
 
     @OneToMany(() => MediaEntity, (media) => media.post)
     medias: MediaEntity[];

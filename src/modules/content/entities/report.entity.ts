@@ -1,5 +1,13 @@
-import { Expose, Type } from 'class-transformer';
-import { Column, CreateDateColumn, Entity, Index, ManyToOne, UpdateDateColumn } from 'typeorm';
+import { Type } from 'class-transformer';
+import {
+    Column,
+    CreateDateColumn,
+    DeleteDateColumn,
+    Entity,
+    Index,
+    ManyToOne,
+    UpdateDateColumn,
+} from 'typeorm';
 
 import { BaseEntity } from '@/modules/database/base';
 
@@ -10,8 +18,8 @@ import { ReportStatus } from '../constants';
 import { CommentEntity } from './comment.entity';
 import { PostEntity } from './post.entity';
 
-class ReportEntity extends BaseEntity {
-    @Expose()
+@Entity('content_reports')
+export class ReportEntity extends BaseEntity {
     @ManyToOne(() => UserEntity, (user) => user.reporters, {
         nullable: false,
         onDelete: 'CASCADE',
@@ -20,14 +28,21 @@ class ReportEntity extends BaseEntity {
     @Index('idx_uid')
     reporter: UserEntity;
 
-    @Expose()
+    @ManyToOne(() => PostEntity, (post) => post.reports)
+    post: PostEntity;
+
+    @ManyToOne(() => CommentEntity, (comment) => comment.reports)
+    comment: CommentEntity;
+
+    @ManyToOne(() => UserEntity, (user) => user.reports)
+    user: UserEntity;
+
     @Column({
         comment: '举报内容',
-        nullable: false,
+        default: '',
     })
     content: string;
 
-    @Expose()
     @Column({
         comment: '处理状态',
         type: 'enum',
@@ -36,45 +51,27 @@ class ReportEntity extends BaseEntity {
     })
     status: ReportStatus;
 
-    @Expose()
     @Column({
         comment: '处理结果',
-        nullable: false,
+        default: '',
     })
     result: string;
 
-    @Expose()
     @Type(() => Date)
     @CreateDateColumn({
         comment: '创建时间',
     })
     createdAt: Date;
 
-    @Expose()
     @Type(() => Date)
     @UpdateDateColumn({
         comment: '更新时间',
     })
     updatedAt: Date;
-}
 
-@Entity('content_reports_user')
-export class UserReportEntity extends ReportEntity {
-    @Expose()
-    @ManyToOne((type) => UserEntity, (user) => user.reports)
-    user: UserEntity;
-}
-
-@Entity('content_reports_post')
-export class PostReportEntity extends ReportEntity {
-    @Expose()
-    @ManyToOne((type) => PostEntity, (post) => post.reports)
-    post: PostEntity;
-}
-
-@Entity('content_reports_comment')
-export class CommentReportEntity extends ReportEntity {
-    @Expose()
-    @ManyToOne((type) => CommentEntity, (comment) => comment.reports)
-    comment: CommentEntity;
+    @Type(() => Date)
+    @DeleteDateColumn({
+        comment: '删除时间',
+    })
+    deletedAt: Date;
 }

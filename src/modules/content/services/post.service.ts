@@ -315,7 +315,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
             post.is_draft && !isNil(data.isDraft) && !data.isDraft ? Date.now() / 1000 : 0;
         await this.repository.update(
             data.id,
-            Object.assign(updateData, { publishedAt, is_draft: data.isDraft }),
+            Object.assign(updateData, { publishedAt, is_draft: data.isDraft }) as any,
         );
         if (!isNil(this.searchService)) {
             try {
