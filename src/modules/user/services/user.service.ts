@@ -190,7 +190,10 @@ export class UserService extends BaseService<UserEntity, UserRepository> impleme
      * @param user
      * @param param1
      */
-    async updateNicknameAndAvatar(user: UserEntity, { nickname, avatarPath,introduction,address,gender,birthday }: UpdateAccountDto) {
+    async updateNicknameAndAvatar(
+        user: UserEntity,
+        { nickname, avatarPath, introduction, address, gender, birthday }: UpdateAccountDto,
+    ) {
         user.nickname = nickname;
         user.avatarPath = avatarPath;
         user.introduction = introduction;

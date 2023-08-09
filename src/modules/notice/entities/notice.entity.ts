@@ -36,11 +36,11 @@ export class NoticeEntity extends BaseEntity {
     @ManyToOne(() => CommentEntity)
     comment?: CommentEntity;
 
-    @Column({ comment: '内容', length: 1000 })
+    @Column({ comment: '内容', length: 1000, default: '' })
     content?: string;
 
     @Exclude()
-    @Column({ comment: '是否已读' })
+    @Column({ comment: '是否已读', default: false })
     is_read: boolean;
 
     @Exclude()
