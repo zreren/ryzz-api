@@ -3,9 +3,23 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { CommentEntity } from '../entities';
 import { CancelCommentLikeEvent, CommentLikeEvent } from '../events';
+import { CommentPublishedEvent } from '../events/commentPublished.event';
 
 @Injectable()
 export class CommentListener {
+    @OnEvent('comment.published')
+    async handleComment(payload: CommentPublishedEvent) {
+        console.log(payload);
+        payload.root_comment_id &&
+            CommentEntity.createQueryBuilder(CommentEntity.name)
+                .where('id = :id', { id: payload.root_comment_id })
+                .update(CommentEntity)
+                .set({
+                    replyCount: () => 'replyCount + 1',
+                })
+                .execute();
+    }
+
     @OnEvent('comment.like')
     handleCommentLikeEvent(payload: CommentLikeEvent) {
         console.log(`comment ${payload.comment_id} like`);

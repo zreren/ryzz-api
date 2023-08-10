@@ -17,12 +17,17 @@ export class QueryCommentDto extends ListQueryDto {
     @ApiPropertyOptional({
         description: '评论所属文章ID:根据传入评论所属文章的ID对评论进行过滤',
     })
-    @IsDataExist(PostEntity, {
-        message: '所属的文章不存在',
-    })
-    @IsUUID(undefined, { message: '分类ID格式错误' })
-    @IsOptional()
+    @IsUUID(undefined, { message: '文章ID格式错误' })
     post?: string;
+}
+
+@DtoValidation({ type: 'query' })
+export class QueryChildrenCommentDto extends ListQueryDto {
+    @ApiPropertyOptional({
+        description: '评论所属文章ID:根据传入评论所属文章的ID对评论进行过滤',
+    })
+    @IsUUID(undefined, { message: '父评论ID格式错误' })
+    parent: string;
 }
 
 /**

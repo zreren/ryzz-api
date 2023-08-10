@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Post, Query, Req, SerializeOptions } from '@nestjs/common';
 
+import { JwtService } from '@nestjs/jwt';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { isNil } from 'lodash';
 import { ExtractJwt } from 'passport-jwt';
 
 import { BaseController } from '@/modules/restful/base';
@@ -17,10 +19,12 @@ import { ContentModule } from '../content.module';
 import {
     CreateCommentDto,
     LikeCommentDto,
+    QueryChildrenCommentDto,
     QueryCommentDto,
     QueryCommentTreeDto,
     UnlikeCommentDto,
 } from '../dtos';
+import { CommentEntity, PostEntity } from '../entities';
 import { CommentService, LikeService } from '../services';
 
 @ApiTags('评论')
@@ -53,7 +57,11 @@ import { CommentService, LikeService } from '../services';
 }))
 @Controller('comments')
 export class CommentController extends BaseController<CommentService> {
-    constructor(protected service: CommentService, private readonly likeService: LikeService) {
+    constructor(
+        protected service: CommentService,
+        private readonly likeService: LikeService,
+        private readonly jwtService: JwtService,
+    ) {
         super(service);
     }
 
@@ -82,5 +90,36 @@ export class CommentController extends BaseController<CommentService> {
     async cancelLike(@Body() data: UnlikeCommentDto, @ReqUser() user: UserEntity) {
         console.log('cancleLike');
         return this.likeService.cancelLikeComment(user.id, data.comment);
+    }
+
+    @Get('parents')
+    @ApiOperation({ summary: '一级评论' })
+    @Guest()
+    async getComments(
+        @Query()
+        query: QueryCommentDto,
+        @Req() request: any,
+    ) {
+        const post = await PostEntity.findOneBy({ id: query.post });
+        if (isNil(post)) {
+            throw new Error('post not exists');
+        }
+
+        const requestToken = ExtractJwt.fromAuthHeaderAsBearerToken()(request) as string;
+        const { sub } = this.jwtService.decode(requestToken);
+        return this.service.getPostComments(post, sub as string, query.page, query.limit);
+    }
+
+    @Get('children')
+    @ApiOperation({ summary: '子评论' })
+    @Guest()
+    async getChildren(@Query() query: QueryChildrenCommentDto, @Req() request: any) {
+        const parent = await CommentEntity.findOneBy({ id: query.parent });
+        if (isNil(parent)) {
+            throw new Error('parent comment not exists');
+        }
+        const requestToken = ExtractJwt.fromAuthHeaderAsBearerToken()(request) as string;
+        const { sub } = this.jwtService.decode(requestToken);
+        return this.service.getChildrenComments(parent, sub, query.page, query.limit);
     }
 }

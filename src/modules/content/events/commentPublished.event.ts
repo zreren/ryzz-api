@@ -5,6 +5,8 @@ export class CommentPublishedEvent {
 
     comment_id: string;
 
+    root_comment_id: string;
+
     public constructor(init?: Partial<CommentPublishedEvent>) {
         Object.assign(this, init);
     }

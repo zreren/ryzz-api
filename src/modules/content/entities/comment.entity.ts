@@ -18,6 +18,14 @@ import { UserEntity } from '@/modules/user/entities';
 import { CommentLikeEntity } from './like.entity';
 import { PostEntity } from './post.entity';
 
+class InteractionInfo {
+    liked = false;
+
+    like_count = 0;
+
+    reply_count = 0;
+}
+
 /**
  * 树形嵌套评论
  */
@@ -36,7 +44,6 @@ export class CommentEntity extends BaseEntity {
     @Index('idx_uid')
     user: UserEntity;
 
-    @Expose()
     @OneToMany(() => CommentLikeEntity, (commentLike) => commentLike.comment)
     post_likes: CommentLikeEntity[];
 
@@ -44,10 +51,14 @@ export class CommentEntity extends BaseEntity {
     @Column({ comment: '评论内容', type: 'longtext' })
     body: string;
 
-    @Expose()
     @Type(() => Number)
     @Column({ comment: '点赞数', default: 0 })
     likeCount: number;
+
+    @Type(() => Number)
+    @Column({ comment: '回复数量，只有根节点存储该值', default: 0 })
+    @Index()
+    replyCount: number;
 
     @Expose()
     @Type(() => Date)
@@ -69,6 +80,7 @@ export class CommentEntity extends BaseEntity {
     })
     post: PostEntity;
 
+    @Expose()
     @TreeParent({ onDelete: 'CASCADE' })
     parent: CommentEntity | null;
 
@@ -78,4 +90,7 @@ export class CommentEntity extends BaseEntity {
 
     @Expose()
     isLiked = false;
+
+    @Expose()
+    interaction_info: InteractionInfo;
 }
