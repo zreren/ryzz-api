@@ -8,6 +8,8 @@ import { manualPaginateWithItems } from '@/modules/database/helpers';
 
 import { QueryHook, PaginateReturn } from '@/modules/database/types';
 
+import { UserEntity } from '@/modules/user/entities';
+
 import { CreateCollectDto, QueryCollectDto, QueryCollectPostDto, UpdateCollectDto } from '../dtos';
 import { CollectEntity, CollectPostEntity } from '../entities';
 
@@ -47,9 +49,10 @@ export class CollectService extends BaseService<CollectEntity, CollectRepository
      * 新增收藏夹
      * @param data
      */
-    async create(data: CreateCollectDto) {
+    async create(data: CreateCollectDto, user: UserEntity) {
         const item = await this.repository.save({
             ...data,
+            user,
         });
         return this.detail(item.id);
     }
