@@ -19,12 +19,14 @@ jobs:
           
       - name: Install and build
         run: |
+          echo "${{ secrets.SSH_KEY }}"
           npm i -g @nestjs/cli
           npm i
           npm run build
           cp package.json ./dist
           cp package-lock.json ./dist
           cd ./dist && npm i
+          
 
       - name: SCP upload-prod
         uses: appleboy/scp-action@master
